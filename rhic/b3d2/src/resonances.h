@@ -50,6 +50,7 @@ public:
 	void DecayGetResInfoPtr_minmass(int &nbodies,array<CResInfo *,5> &daughterresinfo);
 	bool CheckForDaughters(int code);
 	bool CheckForNeutral();
+	double GenerateThermalMass(double T);
 	CResInfo();
 	static CRandom *ranptr;
 };
@@ -68,11 +69,12 @@ public:
 	void CalcEoSandChi(double T);
 	void CalcEosandKubo(double T,double &epsilon,double &P,double &nhadrons,double &sdens,double &kubo);
 	void freegascalc_onespecies(double m,double T,double &p,double &e,double &dens,double &sigma2,double &dedt);
+	void freegascalc_onespecies_finitewidth(double m,double T,double width,double minmass,double &p,double &e,double &dens,double &sigma2,double &dedt);
 	parameterMap *parmap;
 	CMerge ***MergeArray;
 	double **SigmaMaxArray;
 	static CB3D *b3d;
-	void freegascalc_onespecies_offshell(CResInfo *resinfo,double T,double &epsilon,double &P,double &dens,double &sigma2,double &dedt);
+	//void freegascalc_onespecies_offshell(CResInfo *resinfo,double T,double &epsilon,double &P,double &dens,double &sigma2,double &dedt);
 };
 
 
