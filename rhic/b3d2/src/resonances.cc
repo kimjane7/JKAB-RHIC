@@ -144,12 +144,36 @@ bool CResInfo::CheckForNeutral(){
 	return neutral;
 }
 
+double CResInfo::GetThermalMass(double T) {
+	double k2mm = gsl_sf_bessel_Kn(2,(minmass/T)); // k2 for minmass
+	double n0minm = k2mm*minmass*minmass*T/(2*PI*PI*HBARC*HBARC*HBARC);
+		// n0 density value for the min mass
+	double m; int i = 0; // for use in while loop
+	while (i == 0) {
+		double r1 = ranptr->ran(); // get random numbers
+		double r2 = ranptr->ran(); // between [0, 1]
+		m = ((width/2)*tan(PI*(r1 - .5))) + mass;
+			// generate random mass value proportional
+			// to the lorentz distribution
+		if (m < minmass) continue;
+			// throw out values out of range
+		double k2 = gsl_sf_bessel_Kn(2,(m/T)); // k2 value
+		double n0 = k2*m*m*T/(2*PI*PI*HBARC*HBARC*HBARC);
+			// n0 value for random mass;
+		if (r2 < (n0/n0minm)) i = 1; // success
+	}
+	return (m); // return a random mass proportional to 
+		    // the lorentz distribution and also to
+		    // the n0 density value (k2*m^2)
+}
+	
 void CResInfo::Print(){
 	printf("+++++++ ID=%d, M=%g, M_min=%g, %s +++++++++\n",code,mass,minmass,name.c_str());
 	printf("Gamma=%g, Spin=%g, Decay=%d\n",width,spin,int(decay));
 	printf("Q=%d, B=%d, S=%d, G_parity=%d\n",charge,baryon,strange,G_Parity);
 }
 
+/*
 void CResList::freegascalc_onespecies_offshell(CResInfo *resinfo,double T,double &epsilon,double &P,double &dens,double &sigma2,double &dedt){
 	double width=resinfo->width;
 	double mass=resinfo->mass;
@@ -170,6 +194,34 @@ void CResList::freegascalc_onespecies_offshell(CResInfo *resinfo,double T,double
 		}
 	}
 }
+*/
+void CResList::freegascalc_onespecies_finitewidth(double m0, double T, double width, double minmass, double &epsilon, double &P, double &dens, double &sigma2, double &dedt) {
+	int i, cnt = 0;
+	double N = 500; // number of points **MAGIC**
+	double b = 1/N; // percentage between points
+	double b1 = -b/2; // initialize starting point
+	double esum = 0, Psum = 0, densum = 0, sigsum = 0, dedtsum = 0;
+		// initialize sums	
+	for (i = 0; i < N; i++) {
+		b1 = b1 + b; // percentage increases on every loop
+		double m = m0 + (width/2)*tan(PI*(b1-.5));
+			// find corresponding mass value
+		if (m < minmass) { // discard points less than min mass
+			cnt++; // count the number of discarded points
+			continue; // on to the next!
+		}
+		freegascalc_onespecies(m,T,epsilon,P,dens,sigma2,dedt);
+			// get all the values per changing mass
+		// icrement all of the summed values!
+		esum = esum + epsilon; Psum = Psum + P;
+		densum = densum + dens; sigsum = sigsum + sigma2;
+		dedtsum = dedtsum + dedt;
+		}
+		// return the averages over (N - cnt) points
+	epsilon = esum/(N-cnt); P = Psum/(N-cnt);
+	dens = densum/(N-cnt); sigma2 = sigsum/(N-cnt);
+	dedt = dedtsum/(N-cnt);
+} 	
 
 void CResList::freegascalc_onespecies(double m,double T,double &epsilon,double &P,double &dens,double &sigma2,double &dedt){
 	const double prefactor=1.0/(2.0*PI*PI*pow(HBARC,3));
@@ -373,7 +425,7 @@ void CResList::CalcEoS(double T,double &epsilon,double &P,double &nhadrons,
 vector<double> &density,vector<double> &boseweight){
 	CResInfo *resinfoptr;
 	CResInfoMap::iterator rpos;
-	double s,m,degen;
+	double s,m,w,minm,degen;
 	double pi,epsiloni,densi,sigma2i,dedti,bosenorm=0.0;
 	int ires=0,nres,ibose,nbose;
 	char dummy[100];
@@ -391,6 +443,8 @@ vector<double> &density,vector<double> &boseweight){
 		if(resinfoptr->code!=22){
 			degen=2.0*resinfoptr->spin+1.0;
 			m=resinfoptr->mass;
+			w = resinfoptr->width;
+			minm = resinfoptr->minmass;
 			nbose=1;
 			if(abs(resinfoptr->code)==211 || resinfoptr->code==111)
 				nbose=boseweight.size()-1;
@@ -399,7 +453,7 @@ vector<double> &density,vector<double> &boseweight){
 			density[ires]=0.0;
 			boseweight[0]=0.0;
 			for(ibose=1;ibose<=nbose;ibose++){
-				freegascalc_onespecies(m,T/double(ibose),epsiloni,pi,densi,sigma2i,dedti);
+				freegascalc_onespecies_finitewidth(m,T/double(ibose),w,minm,epsiloni,pi,densi,sigma2i,dedti);
 				if(resinfoptr->code==211)
 					boseweight[ibose]=boseweight[ibose-1]+densi*degen;
 				P+=pi*degen;
