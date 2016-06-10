@@ -72,7 +72,8 @@ int CvolumeElement2D::MakeParts(){
 			ispecies+=1;
 			sampler->cummulative_N+=delN;
 			while(sampler->cummulative_N>sampler->cummulative_random){
-				mass=resinfo->mass;
+				if(resinfo->width>1.0) mass=resinfo->GenerateThermalMass(sampler->Tf);
+				else mass=resinfo->mass;
 				n=1;
 				ran1=randy->ran();
 				if(abs(resinfo->code)==211 || resinfo->code==111){
