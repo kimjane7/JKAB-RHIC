@@ -216,7 +216,7 @@ void CResList::freegascalc_onespecies_finitewidth(double m0, double T, double wi
 		esum = esum + epsilon; Psum = Psum + P;
 		densum = densum + dens; sigsum = sigsum + sigma2;
 		dedtsum = dedtsum + dedt;
-		}
+	}
 		// return the averages over (N - cnt) points
 	epsilon = esum/(N-cnt); P = Psum/(N-cnt);
 	dens = densum/(N-cnt); sigma2 = sigsum/(N-cnt);
