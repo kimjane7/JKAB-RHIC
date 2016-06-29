@@ -154,7 +154,6 @@ double CResInfo::GenerateThermalMass(double maxweight, double T){
 			m2+=branchlist[0]->resinfoptr[n]->mass;
 		}
 		double k2mr = gsl_sf_bessel_Kn(2,(mass/T)); // K2 for resmass
-		if ((m1+m2) > mass) mass = m1+m2+1;
 		double kr = (1/(2*mass))*sqrt(pow(mass*mass-m1*m1-m2*m2,2) - (4*m1*m1*m2*m2)); // k at resonant mass
 		int i = 0; // for use in while loop
 		while (i == 0) {
