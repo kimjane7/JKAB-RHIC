@@ -16,7 +16,9 @@ public:
 	FourVector Omega; // volume elements (four-vectors)
 	double Omegamax;
 	Cvertex2D *vertex[3]; //vertices of triangle
-	double pitilde[4][4]; // shear tensor
+	double x,y,tau,ux,uy;
+	double **pitilde; // shear tensor
+	CvolumeElement2D();
 	void Initialize();
 	void CalcEquilibriumQuantities();
 	void CopyBulkQuantities(CvolumeElement2D *element);
@@ -44,13 +46,16 @@ public:
 	CResList *reslist;
 	vector<CvolumeElement2D> volume_element;
 	vector<Cvertex2D> vertex;
-	bool VISCOUSCORRECTIONS;
+	bool VISCOUSCORRECTIONS,TRIANGLE_FORMAT,JAKI_FORMAT;
 	FILE *xyfptr;
 
 	Csampler(CB3D *b3d); // Constructor
 	~Csampler();
 
 	void ReadVolumeElements2D();
+	void ReadVolumeElements2D_triangles();
+	void ReadVolumeElements2D_Jaki();
+	void ReadVolumeElements2D_center();
 	void ReadVolumeElements3D();
 	vector<CvolumeElement2D> element;
 	int MakeB3DEvent();

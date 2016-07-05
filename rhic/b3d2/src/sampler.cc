@@ -9,6 +9,7 @@ Csampler::Csampler(CB3D *b3dset){
 	xyfptr=fopen("xy.dat","w");
 #endif
 	VISCOUSCORRECTIONS=true;
+	TRIANGLE_FORMAT=true;
 	CvolumeElement2D::sampler=this;
 	randy=b3d->randy;
 	reslist=b3d->reslist;
@@ -18,6 +19,8 @@ Csampler::Csampler(CB3D *b3dset){
 	Tf=1000.0*parameter::getD(b3d->parmap,"HYDRO_FOTEMP",165.0);
 	ETAMAX=parameter::getD(b3d->parmap,"B3D_ETAMAX",1.0);
 	NBOSE=parameter::getI(b3d->parmap,"B3D_NBOSE",1);
+	TRIANGLE_FORMAT=parameter::getB(b3d->parmap,"SAMPLER_TRIANGLE_FORMAT",true);
+	JAKI_FORMAT=parameter::getB(b3d->parmap,"SAMPLER_JAKI_FORMAT",true);
 	densityf.clear();
 	maxweight.clear();
 	boseweight.resize(NBOSE+1);
@@ -100,6 +103,17 @@ void Csampler::CalcPiFromParts(){
 }
 
 void Csampler::ReadVolumeElements2D(){
+	if(TRIANGLE_FORMAT)
+		ReadVolumeElements2D_triangles();
+	else if(JAKI_FORMAT)
+		ReadVolumeElements2D_Jaki();
+	else{
+		printf("Sampler format screwed up\n");
+		exit(1);
+	}
+}
+	
+void Csampler::ReadVolumeElements2D_triangles(){
 	string filename;
 	CvolumeElement2D *elem;
 	double tau,deltau,H;
@@ -112,7 +126,6 @@ void Csampler::ReadVolumeElements2D(){
 	filename="model_output/"+b3d->run_name+"/"+b3d->qualifier+"/vertices2D.dat";
 	FILE *fptr=fopen(filename.c_str(),"r");
 	
-
 	fscanf(fptr,"%d",&ivertex);
 	while(!feof(fptr)){
 		if(ivertex==vertex.size())
@@ -168,6 +181,54 @@ void Csampler::ReadVolumeElements2D(){
 	pi33overPbar=pi33overPbar/pi33overPbarnorm;
 	nelements=ielement;
 	printf("data read in, nelements=%d, pi33/P=%g\n",nelements,pi33overPbar);
+}
+
+void Csampler::ReadVolumeElements2D_Jaki(){
+	string filename;
+	CvolumeElement2D *elem;
+	double dumbo;
+	int alpha;
+	double sigma,PI,**pi,*u;
+	u=new double[4];
+	pi=new double *[4];
+	for(alpha=0;alpha<4;alpha++)
+		pi[alpha]=new double[4];
+	int ielement,initarraysize=1000;
+	char dummy[300];
+	element.clear();
+	nelements=0;
+	filename="model_output/"+b3d->run_name+"/"+b3d->qualifier+"/hydro_Jaki2D.dat";
+	FILE *fptr=fopen(filename.c_str(),"r");
+	ielement=0;
+
+	while(!feof(fptr)){
+		if(element.size()==ielement)
+			element.resize(element.size()+initarraysize);
+		elem=&element[ielement];
+		fscanf(fptr,"%lf %lf %lf",&(elem->Omega[0]),&(elem->Omega[1]),&(elem->Omega[2]));
+		fscanf(fptr,"%lf %lf %lf %lf",&dumbo,&(elem->ux),&(elem->uy),&sigma);
+		fscanf(fptr,"%lf %lf %lf %lf %lf",&PI,&pi[0][0],&pi[1][1],&pi[2][2],&pi[1][2]);
+		fscanf(fptr,"%lf %lf %lf",&(elem->tau),&(elem->x),&(elem->y));
+		u[1]=elem->ux; u[2]=elem->uy;
+		u[0]=sqrt(1.0+u[1]*u[1]+u[2]*u[2]); u[3]=0.0;
+		pi[2][1]=pi[1][2];
+		pi[2][3]=pi[3][2]=pi[1][3]=pi[3][1]=pi[0][3]=pi[3][0]=0.0;
+		pi[0][1]=(pi[1][1]*u[1]+pi[1][2]*u[2])/u[0];
+		pi[1][0]=pi[0][1];
+		pi[0][2]=(pi[2][1]*u[1]+pi[2][2]*u[2])/u[0];
+		pi[2][0]=pi[0][2];
+		pi[0][3]=pi[3][0]=0.0;
+		//Misc::Boost(u,pi,elem->pitilde);
+		Misc::BoostToCM(u,pi,elem->pitilde); //one of these two should be correct
+		elem->epsilon=epsilonf;
+		elem->density=&densityf;
+		elem->P=Pf;
+		elem->lambda=lambdaf;
+		elem->nhadrons=nhadronsf;
+		elem->CalcOmegamax();
+		ielement+=1;
+	}
+	nelements=ielement;
 }
 
 double Csampler::GetLambda(double T,double P,double epsilon){

@@ -15,6 +15,18 @@ void CvolumeElement2D::Initialize(){
 	}
 }
 
+CvolumeElement2D::CvolumeElement2D(){
+	int alpha,beta;
+	pitilde=new double *[4];
+	for(alpha=0;alpha<4;alpha++){
+		Omega[alpha]=0.0;
+		pitilde[alpha]=new double[4];
+		for(beta=0;beta<4;beta++){
+			pitilde[alpha][beta]=0.0;
+		}
+	}
+}
+
 void CvolumeElement2D::Print(){
 	int alpha,beta;
 	printf("Omega=(%g,%g,%g,%g), Omegamax=%g\n",Omega[0],Omega[1],Omega[2],Omega[3],Omegamax);
@@ -73,10 +85,12 @@ int CvolumeElement2D::MakeParts(){
 			delN=(*density)[ispecies]*Omegamax*Xscale*nsample;
 			ispecies+=1;
 			sampler->cummulative_N+=delN;
-			while(sampler->cummulative_N>sampler->cummulative_random){ 
+			while(sampler->cummulative_N>sampler->cummulative_random){
 				double width=resinfo->width;
-				if(width>1.0) mass=resinfo->GenerateThermalMass(sampler->maxweight[ispecies], sampler->Tf);
-				else mass=resinfo->mass;
+				if(width>1.0)
+					mass=resinfo->GenerateThermalMass(sampler->maxweight[ispecies], sampler->Tf);
+				else
+					mass=resinfo->mass;
 				n=1;
 				ran1=randy->ran();
 				if(abs(resinfo->code)==211 || resinfo->code==111){
@@ -107,8 +121,13 @@ int CvolumeElement2D::MakeParts(){
 				w[0]=(1.0-ran1)*ran2;
 				w[1]=ran1*ran2;
 				w[2]=1.0-ran2;
-				u[1]=w[0]*vertex[0]->ux+w[1]*vertex[1]->ux+w[2]*vertex[2]->ux;
-				u[2]=w[0]*vertex[0]->uy+w[1]*vertex[1]->uy+w[2]*vertex[2]->uy;
+				if(sampler->TRIANGLE_FORMAT){
+					u[1]=w[0]*vertex[0]->ux+w[1]*vertex[1]->ux+w[2]*vertex[2]->ux;
+					u[2]=w[0]*vertex[0]->uy+w[1]*vertex[1]->uy+w[2]*vertex[2]->uy;
+				}
+				else{
+					u[1]=ux; u[2]=uy;
+				}
 				u[3]=0.0;
 				u[0]=sqrt(1.0+u[1]*u[1]+u[2]*u[2]);
 				Misc::Boost(u,p,plab);
@@ -122,16 +141,21 @@ int CvolumeElement2D::MakeParts(){
 				}
 				if(randy->ran()<fabs(weight)){
 					part=sampler->b3d->GetDeadPart();
-					for(alpha=0;alpha<3;alpha++)
-						r[alpha]=w[0]*vertex[0]->r[alpha]+w[1]*vertex[1]->r[alpha]+w[2]*vertex[2]->r[alpha];
+					if(sampler->TRIANGLE_FORMAT){
+						for(alpha=0;alpha<3;alpha++)
+							r[alpha]=w[0]*vertex[0]->r[alpha]+w[1]*vertex[1]->r[alpha]+w[2]*vertex[2]->r[alpha];
 					
-					if(randy->ran()<0.5){
-						r[1]=-r[1];
-						plab[1]=-plab[1];
+						if(randy->ran()<0.5){
+							r[1]=-r[1];
+							plab[1]=-plab[1];
+						}
+						if(randy->ran()<0.5){
+							r[2]=-r[2];
+							plab[2]=-plab[2];
+						}
 					}
-					if(randy->ran()<0.5){
-						r[2]=-r[2];
-						plab[2]=-plab[2];
+					else{
+						r[0]=tau; r[1]=x; r[2]=y;
 					}
 					intweight=1;
 					reality=true;

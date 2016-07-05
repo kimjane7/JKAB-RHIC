@@ -144,9 +144,8 @@ bool CResInfo::CheckForNeutral(){
 	return neutral;
 }
 
-
 double CResInfo::GenerateThermalMass(double maxweight, double T){
-	double m;
+	double m,kr;
 	if(decay){
 		double m1=branchlist[0]->resinfoptr[0]->mass;
 		double m2=0.0;
@@ -154,20 +153,21 @@ double CResInfo::GenerateThermalMass(double maxweight, double T){
 			m2+=branchlist[0]->resinfoptr[n]->mass;
 		}
 		double k2mr = gsl_sf_bessel_Kn(2,(mass/T)); // K2 for resmass
-		double kr = (1/(2*mass))*sqrt(pow(mass*mass-m1*m1-m2*m2,2) - (4*m1*m1*m2*m2)); // k at resonant mass
+		kr=pow(mass*mass-m1*m1-m2*m2,2) - (4*m1*m1*m2*m2);
+		kr = (1/(2*mass))*sqrt(kr); // k at resonant mass
 		int i = 0; // for use in while loop
-		while (i == 0) {
+		while(i==0){
 			double r1 = ranptr->ran(); // get random numbers
 			double r2 = ranptr->ran(); // between [0, 1]
 			m = ((width/2)*tan(PI*(r1 - .5))) + mass;// generate random mass value proportional to the lorentz distribution
 			if ((m < minmass) ) continue;
-				// throw out values out of range
+			// throw out values out of range
 			double k = (1/(2*m))*sqrt(pow(m*m-m1*m1-m2*m2,2) - (4*m1*m1*m2*m2)); // k at mass m 
 			double k2 = gsl_sf_bessel_Kn(2,(m/T)); // K2 value
 			double rho = (4*width/PI)*pow(k,6)/((2*width*width*pow(k,6)) + (pow(mass-m,2)*pow(k*k+kr*kr,3))); 
-	        double lor = (width/(2*PI))/(pow(width/2,2) + pow(mass-m,2));
-	        double weight = rho*k2*m*m/(lor*k2mr*mass*mass*maxweight);
-	        if (r2 < weight) i = 1; // success
+			double lor = (width/(2*PI))/(pow(width/2,2) + pow(mass-m,2));
+			double weight = rho*k2*m*m/(lor*k2mr*mass*mass*maxweight);
+			if (r2 < weight) i = 1; // success
 		}
 	}
 	else m=mass;
