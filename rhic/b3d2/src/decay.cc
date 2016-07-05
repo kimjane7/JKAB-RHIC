@@ -5,7 +5,7 @@
 void CB3D::Decay(CPart *mother,int &nbodies,array<CPart *,5> &daughter){
 	const double HBARC=197.326;
 	int ibody,alpha;
-	double mass[6],mtot;
+	double mass[6],mtot,mprime,wmaxmass,wmass,mguess,kmass,kmaxmass;
 	CPart *dptr;
 
 	FourVector *p[6],kprime,qprime,ptot,pprime,u12,pp,u;
@@ -19,7 +19,32 @@ void CB3D::Decay(CPart *mother,int &nbodies,array<CPart *,5> &daughter){
 	/* Create daughter objects */
 	mtot=0.0;
 	for(ibody=0;ibody<nbodies;ibody++){
-		mass[ibody+1]=daughter[ibody]->resinfo->mass;
+		if(daughter[ibody]->resinfo->decay){
+			//generate mass according to density of states, ~ rho(m)*k*E1*E2
+			mprime=0;
+			for(jbody=0;jbody<nbodies;jbody++){
+				if(jbody!=ibody)
+					mprime+=daughter[jbody]->resinfo->mass;
+			}
+			kmaxmass=pow(mass[0],4)+pow(mprime,4)-2.0*mass[0]*mass[0]*mprime*mprime;
+			kmaxmass=0.5*sqrt(kmaxmass)/mass[0];
+			wmaxmass=kmaxmass*kmaxmass*sqrt(kmaxmass*kmaxmass+mprime*mprime);
+			do{
+				mguess=daughter[jbody]->resinfo->GenerateMass();
+				kguess=pow(mass[0],4)+pow(mprime,4)+pow(mguess,4)-2.0*mass[0]*mass[0]*mprime*mprime
+					-2.0*mass[0]*mass[0]*mguess*mguess-2.0*mguess*mguess*mprime*mprime;
+				if(kguess<0.0)
+					wmass=0.0;
+				else{
+					kguess=0.5*sqrt(kguess)/mass[0];
+					wmass=kguess*sqrt(mprime*mprime+k*k)*sqrt(mguess*mguess+k*k);
+				}
+			}while(randy->ran()>wmass/wmaxmass);
+			mass[ibody+1]=mguess;
+		}
+		else{
+			mass[ibody+1]=daughter[ibody]->resinfo->mass;
+		}
 		mtot+=mass[ibody+1];
 		p[ibody+1]=&daughter[ibody]->p;
 	}
