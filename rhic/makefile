@@ -1,4 +1,4 @@
-include ../makefile_defs.mk
+include ../../makefile_defs.mk
 
 CORAL_PATH = rhic/coral
 B3D_PATH = rhic/b3d2

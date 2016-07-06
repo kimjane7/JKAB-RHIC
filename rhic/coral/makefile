@@ -1,6 +1,6 @@
 #enter make, then make install, make clean, make uninstall
 #other commands: make coralutils, make coral, make install_coralutils, make install_coral
-include ../../makefile_defs.mk
+include ../../../makefile_defs.mk
 #the variables below were set in the include statement above
 CPP=${MADAI_CPP} ${MADAI_COMPILERDEFS}
 #e.g. /usr/bin/g++

@@ -1,4 +1,4 @@
-include ../../makefile_defs.mk
+include ../../../makefile_defs.mk
 # enter make all, make b3d, make install, make clean or make uninstall
 ### the following variables are set in the include statement above
 CPP=${MADAI_CPP}

@@ -1,9 +1,8 @@
 #!/usr/bin/bash
-include ../../makefile_defs.mk
+include ../../../makefile_defs.mk
 
 # enter make, make parmaker, make install, make clean, make uninstall
 # local executables can be made with make runHydro or make multiEos
-include ../../makefile_defs.mk
 #########################################################################
 #HOPEFULLY, everything below need not be touched
 

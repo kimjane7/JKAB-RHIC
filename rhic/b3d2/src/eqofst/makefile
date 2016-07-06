@@ -1,4 +1,4 @@
-include ../../../../makefile_defs.mk
+include ../../../../../makefile_defs.mk
 OPT=${MADAI_CFLAGS}
 CH=${MADAI_H}
 #
