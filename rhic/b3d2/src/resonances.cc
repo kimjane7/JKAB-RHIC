@@ -144,6 +144,61 @@ bool CResInfo::CheckForNeutral(){
 	return neutral;
 }
 
+double CResInfo::GenerateMass(){
+	double m;
+	if(decay){
+		double m1=branchlist[0]->resinfoptr[0]->mass;
+		double m2=0.0;
+		for(int n=1;n<(branchlist[0]->resinfoptr.size());n++){
+			m2+=branchlist[0]->resinfoptr[n]->mass;
+		}
+		double kr=sqrt(pow((mass*mass-m1*m1-m2*m2),2.0)-pow((2.0*m1*m2),2.0))/(2.0*mass);
+		int i = 0;
+		while (i == 0) {
+			double r = ranptr->ran();
+			m = ((width/2)*tan(PI*(r - .5))) + mass;
+			if ((m < (m1+m2))||(m>2.0*mass)) continue;
+			double k=sqrt(pow((m*m-m1*m1-m2*m2),2.0)-pow((2.0*m1*m2),2.0))/(2.0*m);
+			double gamma=width*pow(2.0,1.5)*pow(k,3.0)/pow(k*k+kr*kr,1.5);
+	        double rho=(2.0/PI/width)*pow(gamma/2.0,2.0)/(pow(gamma/2.0,2.0)+pow(mass-m,2.0));
+	        double lor = (width/(2*PI))/(pow(width/2,2.0) + pow(mass-m,2.0));
+	        double weight = rho/(lor*8.0);
+	        r = ranptr->ran();
+	        if (r < weight) i = 1; 
+		}
+	}
+	else m=mass;
+	return m;
+}
+
+
+
+double CResInfo::GenerateThermalMass(double maxweight, double T){
+	//maxweight not used
+	double m,m1,m2,weight,r;
+	
+	if(decay){
+
+		double m1=branchlist[0]->resinfoptr[0]->mass;
+		double m2=0.0;
+		for(int n=1;n<(branchlist[0]->resinfoptr.size());n++){
+			m2+=branchlist[0]->resinfoptr[n]->mass;
+		}
+		double max=gsl_sf_bessel_Kn(2,(m1+m2)/T)*(m1+m2)*(m1+m2);
+		int i=0;
+		while (i==0){
+			m=GenerateMass();
+			weight=gsl_sf_bessel_Kn(2,m/T)*m*m/max;
+			if (r<weight) i=1;
+		}
+
+	}
+	else m=mass;
+	return m;
+
+}
+
+/*
 double CResInfo::GenerateThermalMass(double maxweight, double T){
 	double m,kr;
 	if(decay){
@@ -173,6 +228,7 @@ double CResInfo::GenerateThermalMass(double maxweight, double T){
 	else m=mass;
 	return (m); //returns a random mass proportional to n0*L'
 }
+*/
 
 
 

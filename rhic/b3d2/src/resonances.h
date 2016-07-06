@@ -48,6 +48,7 @@ public:
 	void DecayGetResInfoPtr_minmass(int &nbodies,array<CResInfo *,5> &daughterresinfo);
 	bool CheckForDaughters(int code);
 	bool CheckForNeutral();
+	double GenerateMass();
 	double GenerateThermalMass(double maxweight, double T);
 	CResInfo();
 	static CRandom *ranptr;
