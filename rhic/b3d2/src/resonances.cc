@@ -189,6 +189,7 @@ double CResInfo::GenerateThermalMass(double maxweight, double T){
 		while (i==0){
 			m=GenerateMass();
 			weight=gsl_sf_bessel_Kn(2,m/T)*m*m/max;
+			r = ranptr->ran();
 			if (r<weight) i=1;
 		}
 
