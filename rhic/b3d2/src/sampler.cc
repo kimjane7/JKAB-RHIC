@@ -186,8 +186,8 @@ void Csampler::ReadVolumeElements2D_triangles(){
 void Csampler::ReadVolumeElements2D_Jaki(){
 	string filename;
 	CvolumeElement2D *elem;
-	double dumbo;
-	int alpha;
+	double dumbo,udotn,PIbulk;
+	int alpha,beta;
 	double sigma,PI,**pi,*u;
 	u=new double[4];
 	pi=new double *[4];
@@ -198,6 +198,7 @@ void Csampler::ReadVolumeElements2D_Jaki(){
 	element.clear();
 	nelements=0;
 	filename="model_output/"+b3d->run_name+"/"+b3d->qualifier+"/hydro_Jaki2D.dat";
+	printf("opening %s\n",filename.c_str());
 	FILE *fptr=fopen(filename.c_str(),"r");
 	ielement=0;
 
@@ -207,10 +208,13 @@ void Csampler::ReadVolumeElements2D_Jaki(){
 		elem=&element[ielement];
 		fscanf(fptr,"%lf %lf %lf",&(elem->Omega[0]),&(elem->Omega[1]),&(elem->Omega[2]));
 		fscanf(fptr,"%lf %lf %lf %lf",&dumbo,&(elem->ux),&(elem->uy),&sigma);
-		fscanf(fptr,"%lf %lf %lf %lf %lf",&PI,&pi[0][0],&pi[1][1],&pi[2][2],&pi[1][2]);
+		fscanf(fptr,"%lf %lf %lf %lf %lf",&PIbulk,&pi[0][0],&pi[1][1],&pi[2][2],&pi[1][2]);
 		fscanf(fptr,"%lf %lf %lf",&(elem->tau),&(elem->x),&(elem->y));
 		u[1]=elem->ux; u[2]=elem->uy;
 		u[0]=sqrt(1.0+u[1]*u[1]+u[2]*u[2]); u[3]=0.0;
+		udotn=u[0]*elem->Omega[0]-u[1]*elem->Omega[1]-u[2]*elem->Omega[2];
+		for(alpha=0;alpha<3;alpha++)
+			elem->Omega[alpha]=elem->Omega[alpha]/(sigma*udotn);
 		pi[2][1]=pi[1][2];
 		pi[2][3]=pi[3][2]=pi[1][3]=pi[3][1]=pi[0][3]=pi[3][0]=0.0;
 		pi[0][1]=(pi[1][1]*u[1]+pi[1][2]*u[2])/u[0];
@@ -218,8 +222,30 @@ void Csampler::ReadVolumeElements2D_Jaki(){
 		pi[0][2]=(pi[2][1]*u[1]+pi[2][2]*u[2])/u[0];
 		pi[2][0]=pi[0][2];
 		pi[0][3]=pi[3][0]=0.0;
+		pi[3][3]=-pi[1][1]-pi[2][2]-pi[0][0]; // check last sign!!!!!!
+
+		printf("u=(%g,%g,%g,%g)\n",u[0],u[1],u[2],u[3]);
+		for(alpha=0;alpha<4;alpha++){
+			for(beta=0;beta<4;beta++)
+				pi[alpha][beta]*=HBARC;
+		}
 		//Misc::Boost(u,pi,elem->pitilde);
 		Misc::BoostToCM(u,pi,elem->pitilde); //one of these two should be correct
+		for(alpha=0;alpha<4;alpha++){
+			for(beta=0;beta<4;beta++){
+				printf("%10.5f ",pi[alpha][beta]);
+				//printf("%10.5f ",elem->pitilde[alpha][beta]);
+			}
+			printf("\n");
+		}
+		printf("----------------------\n");
+		for(alpha=0;alpha<4;alpha++){
+			for(beta=0;beta<4;beta++){
+				//printf("%10.5f ",pi[alpha][beta]);
+				printf("%10.5f ",elem->pitilde[alpha][beta]);
+			}
+			printf("\n");
+		}
 		elem->epsilon=epsilonf;
 		elem->density=&densityf;
 		elem->P=Pf;

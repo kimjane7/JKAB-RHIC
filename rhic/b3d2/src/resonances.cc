@@ -171,35 +171,6 @@ double CResInfo::GenerateMass(){
 	return m;
 }
 
-
-
-double CResInfo::GenerateThermalMass(double maxweight, double T){
-	//maxweight not used
-	double m,m1,m2,weight,r;
-	
-	if(decay){
-
-		double m1=branchlist[0]->resinfoptr[0]->mass;
-		double m2=0.0;
-		for(int n=1;n<(branchlist[0]->resinfoptr.size());n++){
-			m2+=branchlist[0]->resinfoptr[n]->mass;
-		}
-		double max=gsl_sf_bessel_Kn(2,(m1+m2)/T)*(m1+m2)*(m1+m2);
-		int i=0;
-		while (i==0){
-			m=GenerateMass();
-			weight=gsl_sf_bessel_Kn(2,m/T)*m*m/max;
-			r = ranptr->ran();
-			if (r<weight) i=1;
-		}
-
-	}
-	else m=mass;
-	return m;
-
-}
-
-/*
 double CResInfo::GenerateThermalMass(double maxweight, double T){
 	double m,kr;
 	if(decay){
@@ -229,10 +200,6 @@ double CResInfo::GenerateThermalMass(double maxweight, double T){
 	else m=mass;
 	return (m); //returns a random mass proportional to n0*L'
 }
-*/
-
-
-
 
 void CResInfo::Print(){
 	printf("+++++++ ID=%d, M=%g, M_min=%g, %s +++++++++\n",code,mass,minmass,name.c_str());
@@ -362,7 +329,6 @@ void CResList::freegascalc_onespecies_finitewidth(double resmass, double m1, dou
 	printf("\n      L': %7.2lf, minmass=%7.2lf, width=%5.1lf, dens=%10.9lf, pdiff=%10.9lf, maxweight=%5.1lf\n", resmass, minmass, width, dens, pdiff,maxweight);
 	*/
 }
-
 
 void CResList::ReadResInfo(){
 CMerge *merge;
@@ -501,8 +467,6 @@ while(fscanf(decayinfofile,"%d %lf",&mothercode,&mothermass) && !feof(decayinfof
 fclose(decayinfofile);
 }
 
-
-
 CResInfo* CResList::GetResInfoPtr(int code){
 	CResInfoMap::iterator rpos;
 	rpos=resmap.find(code);
@@ -537,8 +501,6 @@ void CResList::CalcEoS(double T0,double Tf,double delT){
 		printf("%6.2f %15.10e %15.10e %15.10e\n",T,s,P,epsilon);
 	}
 }
-
-
 
 void CResList::CalcEoS(double T,double &epsilon,double &P,double &nhadrons,vector<double> &density,vector<double> &boseweight,vector<double> &maxweight){
 	CResInfo *resinfoptr;
