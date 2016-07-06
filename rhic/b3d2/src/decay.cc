@@ -4,8 +4,8 @@
 
 void CB3D::Decay(CPart *mother,int &nbodies,array<CPart *,5> &daughter){
 	const double HBARC=197.326;
-	int ibody,alpha;
-	double mass[6],mtot,mprime,wmaxmass,wmass,mguess,kmass,kmaxmass;
+	int ibody,jbody,alpha;
+	double mass[6],mtot,mprime,wmaxmass,wmass,mguess,kmass,kmaxmass,kguess;
 	CPart *dptr;
 
 	FourVector *p[6],kprime,qprime,ptot,pprime,u12,pp,u;
@@ -19,27 +19,37 @@ void CB3D::Decay(CPart *mother,int &nbodies,array<CPart *,5> &daughter){
 	/* Create daughter objects */
 	mtot=0.0;
 	for(ibody=0;ibody<nbodies;ibody++){
+		mass[ibody+1]=daughter[ibody]->resinfo->mass;
+	}
+	for(ibody=0;ibody<nbodies;ibody++){
 		if(daughter[ibody]->resinfo->decay){
 			//generate mass according to density of states, ~ rho(m)*k*E1*E2
 			mprime=0;
 			for(jbody=0;jbody<nbodies;jbody++){
 				if(jbody!=ibody)
-					mprime+=daughter[jbody]->resinfo->mass;
+					mprime+=mass[jbody+1];
 			}
 			kmaxmass=pow(mass[0],4)+pow(mprime,4)-2.0*mass[0]*mass[0]*mprime*mprime;
 			kmaxmass=0.5*sqrt(kmaxmass)/mass[0];
 			wmaxmass=kmaxmass*kmaxmass*sqrt(kmaxmass*kmaxmass+mprime*mprime);
 			do{
-				mguess=daughter[jbody]->resinfo->GenerateMass();
-				kguess=pow(mass[0],4)+pow(mprime,4)+pow(mguess,4)-2.0*mass[0]*mass[0]*mprime*mprime
-					-2.0*mass[0]*mass[0]*mguess*mguess-2.0*mguess*mguess*mprime*mprime;
-				if(kguess<0.0)
-					wmass=0.0;
-				else{
+				mguess=daughter[ibody]->resinfo->GenerateMass();
+				if(mass[0]>mguess+mprime){
+					kguess=pow(mass[0],4)+pow(mprime,4)+pow(mguess,4)-2.0*mass[0]*mass[0]*mprime*mprime
+						-2.0*mass[0]*mass[0]*mguess*mguess-2.0*mguess*mguess*mprime*mprime;
 					kguess=0.5*sqrt(kguess)/mass[0];
-					wmass=kguess*sqrt(mprime*mprime+k*k)*sqrt(mguess*mguess+k*k);
+					wmass=kguess*sqrt(mprime*mprime+kguess*kguess)*sqrt(mguess*mguess+kguess*kguess);
 				}
-			}while(randy->ran()>wmass/wmaxmass);
+				else
+					wmass=-1.0;
+			}while(wmass<0.0 || randy->ran()>wmass/wmaxmass);
+			if(wmass>wmaxmass){
+				printf("In  CB3D::Decay, wmass=%g > wmaxmass=%g\n",wmass,wmaxmass);
+				printf("kguess=%g, mguess=%g, mprime=%g, E1=%g, E2=%g, E1+E2=%g=?%g\n",kguess,mguess,mprime,
+				sqrt(kguess*kguess+mguess*mguess),sqrt(kguess*kguess+mprime*mprime),
+				sqrt(kguess*kguess+mguess*mguess)+sqrt(kguess*kguess+mprime*mprime),mass[0]);
+				exit(1);
+			}
 			mass[ibody+1]=mguess;
 		}
 		else{
