@@ -291,7 +291,7 @@ void CResList::freegascalc_onespecies_finitewidth(double resmass, double m1, dou
 	for(E=(m1+m2+0.5*dE);E<2.0*resmass;E+=dE){
 
 		k=sqrt(pow((E*E-m1*m1-m2*m2),2.0)-(4.0*m1*m1*m2*m2))/(2.0*E);
-		gamma=pow(2.0,1.5)*width*pow(k,3.0)/pow((k*k+kr*kr),1.5);
+		gamma=width*pow((2.0*k*k)/(k*k+kr*kr),1.5);
 		rho=(2.0/(width*PI))*0.25*gamma*gamma/((0.25*gamma*gamma)+(resmass-E)*(resmass-E));
 		sum+=rho*dE;
 
