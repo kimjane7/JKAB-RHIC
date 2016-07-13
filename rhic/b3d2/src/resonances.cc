@@ -159,8 +159,8 @@ double CResInfo::GenerateMass(){
 			m = ((width/2)*tan(PI*(r - .5))) + mass;
 			if ((m < (m1+m2))||(m>2.0*mass)) continue;
 			double k=sqrt(pow((m*m-m1*m1-m2*m2),2.0)-pow((2.0*m1*m2),2.0))/(2.0*m);
-			double gamma=width*pow(2.0,1.5)*pow(k,3.0)/pow(k*k+kr*kr,1.5);
-	        double rho=(2.0/PI/width)*pow(gamma/2.0,2.0)/(pow(gamma/2.0,2.0)+pow(mass-m,2.0));
+			double gamma=width*pow((2.0*k*k)/(k*k+kr*kr),1.5);
+			double rho=(2.0/(width*PI))*(0.25*gamma*gamma)/((0.25*gamma*gamma)+(mass-m)*(mass-m));
 	        double lor = (width/(2*PI))/(pow(width/2,2.0) + pow(mass-m,2.0));
 	        double weight = rho/(lor*8.0);
 	        r = ranptr->ran();
@@ -189,10 +189,11 @@ double CResInfo::GenerateThermalMass(double maxweight, double T){
 			m = ((width/2)*tan(PI*(r1 - .5))) + mass;// generate random mass value proportional to the lorentz distribution
 			if ((m < minmass) ) continue;
 			// throw out values out of range
-			double k = (1/(2*m))*sqrt(pow(m*m-m1*m1-m2*m2,2) - (4*m1*m1*m2*m2)); // k at mass m 
+			double k=sqrt(pow((m*m-m1*m1-m2*m2),2.0)-pow((2.0*m1*m2),2.0))/(2.0*m);
+			double gamma=width*pow((2.0*k*k)/(k*k+kr*kr),1.5);
+			double rho=(2.0/(width*PI))*(0.25*gamma*gamma)/((0.25*gamma*gamma)+(mass-m)*(mass-m));
+	        double lor = (width/(2*PI))/(pow(width/2,2.0) + pow(mass-m,2.0));
 			double k2 = gsl_sf_bessel_Kn(2,(m/T)); // K2 value
-			double rho = (4*width/PI)*pow(k,6)/((2*width*width*pow(k,6)) + (pow(mass-m,2)*pow(k*k+kr*kr,3))); 
-			double lor = (width/(2*PI))/(pow(width/2,2) + pow(mass-m,2));
 			double weight = rho*k2*m*m/(lor*k2mr*mass*mass*maxweight);
 			if (r2 < weight) i = 1; // success
 		}
@@ -270,64 +271,58 @@ void CResList::freegascalc_onespecies(double m,double T,double &epsilon,double &
 void CResList::freegascalc_onespecies_finitewidth(double resmass, double m1, double m2, double T, double width,
 	double minmass,double &epsilon,double &P,double &dens,double &sigma2,double &dedt,double &maxweight){
 
-	double dens0, kr, E, dE=0.5, k, gamma, rho, n0, pdiff, lor, weight;
-	double sum=0.0, esum=0.0, psum=0.0, dsum=0.0, sigsum=0.0, dedtsum=0.0, percent=0.000001, closest=1000.0;
-	int count=0;
+	double kr,k,E,E0,dE,gamma,rho,percent,dp,closest;
+	double sum=0.0,esum=0.0,psum=0.0,dsum=0.0,sigsum=0.0,dedtsum=0.0;
+	double n0,resn0,lor,weight;
+	dE=1.0;
+	percent=0.001;
+	dp=0.002;
+	if (width<1.0){
+		dE=0.1;
+		percent=0.0005;
+		dp=0.001;
+	}
+	closest=1000.0;
+	E0=m1+m2;
 	maxweight=0.0;
 
-	/*
-	//call no width function for comparison
-	freegascalc_onespecies(resmass,T,epsilon,P,dens,sigma2,dedt);
-	dens0=dens;
-	printf("\nno width: %7.2lf, minmass=%7.2lf, width=%5.1lf, dens=%10.9lf", resmass, minmass, width, dens);
-	*/
-
-	//calculate kr once
 	kr=sqrt(pow((resmass*resmass-m1*m1-m2*m2),2.0)-4.0*m1*m1*m2*m2)/(2.0*resmass);
 
-	//sweep through E, calculate rho, integral of rho, and maxweight
-	//if integral is close to a multiple of 0.05, calculate dens, count++
+	for(E=(m1+m2+0.5*dE);E<2.0*resmass;E+=dE){
 
-	for(E=(m1+m2);E<2.0*resmass;E+=dE){
 		k=sqrt(pow((E*E-m1*m1-m2*m2),2.0)-(4.0*m1*m1*m2*m2))/(2.0*E);
 		gamma=pow(2.0,1.5)*width*pow(k,3.0)/pow((k*k+kr*kr),1.5);
-		rho=(2.0/width/PI)*gamma*gamma/4.0/((gamma*gamma/4.0)+(resmass-E)*(resmass-E));
+		rho=(2.0/(width*PI))*0.25*gamma*gamma/((0.25*gamma*gamma)+(resmass-E)*(resmass-E));
+		sum+=rho*dE;
+
 		n0=gsl_sf_bessel_Kn(2,E/T)*E*E*T/(2*PI*PI*pow(HBARC,3.0));
-		rho=n0*rho;
-		lor=gsl_sf_bessel_Kn(2,resmass/T)*resmass*resmass*T/(2*PI*PI*pow(HBARC,3.0))*(width/2.0/PI)/(width*width/4.0+(resmass-E)*(resmass-E));
-		weight=rho/lor;
-		//finds max weight
+		resn0=gsl_sf_bessel_Kn(2,resmass/T)*resmass*resmass*T/(2*PI*PI*pow(HBARC,3.0));
+		lor=(width/(2.0*PI))/(0.25*width*width+(resmass-E)*(resmass-E));
+		weight=n0*rho/(resn0*lor);
+
 		if(weight>maxweight) maxweight=weight;
-		//if statement guards against -nan errors
-		if(E!=(m1+m2)) sum+=rho*dE;
-		//finds closest E to desired percent
 		if (abs(sum-percent)<closest) closest=abs(sum-percent);
-		//at closest E, calculate values, add to sum
 		else{
 			freegascalc_onespecies(E,T,epsilon,P,dens,sigma2,dedt);
-			esum+=epsilon;
-			psum+=P;
-			dsum+=dens;
-			sigsum+=sigma2;
-			dedtsum+=dedt;
-			count++;
+			esum+=epsilon*rho*(E-E0);
+			psum+=P*rho*(E-E0);
+			dsum+=dens*rho*(E-E0);
+			sigsum+=sigma2*rho*(E-E0);
+			dedtsum+=dedt*rho*(E-E0);
 			closest=1000.0;
-			percent+=0.000001;
+			percent+=dp;
+			E0=E;
 		}
 	}
 
-	//take average
-	epsilon=esum/count;
-	P=psum/count;
-	dens=dsum/count;
-	sigma2=sigsum/count;
-	dedt=dedtsum/count;
+	epsilon=esum/sum;
+	P=psum/sum;
+	dens=dsum/sum;
+	sigma2=sigsum/sum;
+	dedt=dedtsum/sum;
 
-	/*
-	percent difference
-	pdiff=abs(dens-dens0)/dens0*100.0;
-	printf("\n      L': %7.2lf, minmass=%7.2lf, width=%5.1lf, dens=%10.9lf, pdiff=%10.9lf, maxweight=%5.1lf\n", resmass, minmass, width, dens, pdiff,maxweight);
-	*/
+	//printf("m=%lf\tw=%lf\tm1=%lf\tm2=%lf\ttest=%10.9lf\tfinite=%10.9lf\n",resmass,width,m1,m2,Ltest/sum,dens);
+
 }
 
 void CResList::ReadResInfo(){
