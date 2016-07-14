@@ -146,6 +146,7 @@ bool CResInfo::CheckForNeutral(){
 
 double CResInfo::GenerateMass(){
 	double m;
+	double alpha=0.5;
 	if(decay){
 		double m1=branchlist[0]->resinfoptr[0]->mass;
 		double m2=0.0;
@@ -159,7 +160,7 @@ double CResInfo::GenerateMass(){
 			m = ((width/2)*tan(PI*(r - .5))) + mass;
 			if ((m < (m1+m2))||(m>2.0*mass)) continue;
 			double k=sqrt(pow((m*m-m1*m1-m2*m2),2.0)-pow((2.0*m1*m2),2.0))/(2.0*m);
-			double gamma=width*pow((2.0*k*k)/(k*k+kr*kr),1.5);
+			double gamma=width*pow((2.0*k*k)/(k*k+kr*kr),alpha);
 			double rho=(2.0/(width*PI))*(0.25*gamma*gamma)/((0.25*gamma*gamma)+(mass-m)*(mass-m));
 	        double lor = (width/(2*PI))/(pow(width/2,2.0) + pow(mass-m,2.0));
 	        double weight = rho/(lor*8.0);
@@ -173,6 +174,7 @@ double CResInfo::GenerateMass(){
 
 double CResInfo::GenerateThermalMass(double maxweight, double T){
 	double m,kr;
+	double alpha=0.5;
 	if(decay){
 		double m1=branchlist[0]->resinfoptr[0]->mass;
 		double m2=0.0;
@@ -190,7 +192,7 @@ double CResInfo::GenerateThermalMass(double maxweight, double T){
 			if ((m < minmass) ) continue;
 			// throw out values out of range
 			double k=sqrt(pow((m*m-m1*m1-m2*m2),2.0)-pow((2.0*m1*m2),2.0))/(2.0*m);
-			double gamma=width*pow((2.0*k*k)/(k*k+kr*kr),1.5);
+			double gamma=width*pow((2.0*k*k)/(k*k+kr*kr),alpha);
 			double rho=(2.0/(width*PI))*(0.25*gamma*gamma)/((0.25*gamma*gamma)+(mass-m)*(mass-m));
 	        double lor = (width/(2*PI))/(pow(width/2,2.0) + pow(mass-m,2.0));
 			double k2 = gsl_sf_bessel_Kn(2,(m/T)); // K2 value
@@ -274,6 +276,7 @@ void CResList::freegascalc_onespecies_finitewidth(double resmass, double m1, dou
 	double kr,k,E,E0,dE,gamma,rho,percent,dp,closest;
 	double sum=0.0,esum=0.0,psum=0.0,dsum=0.0,sigsum=0.0,dedtsum=0.0;
 	double n0,resn0,lor,weight;
+	double alpha=0.5;
 	dE=1.0;
 	percent=0.001;
 	dp=0.002;
@@ -291,7 +294,7 @@ void CResList::freegascalc_onespecies_finitewidth(double resmass, double m1, dou
 	for(E=(m1+m2+0.5*dE);E<2.0*resmass;E+=dE){
 
 		k=sqrt(pow((E*E-m1*m1-m2*m2),2.0)-(4.0*m1*m1*m2*m2))/(2.0*E);
-		gamma=width*pow((2.0*k*k)/(k*k+kr*kr),1.5);
+		gamma=width*pow((2.0*k*k)/(k*k+kr*kr),alpha);
 		rho=(2.0/(width*PI))*0.25*gamma*gamma/((0.25*gamma*gamma)+(resmass-E)*(resmass-E));
 		sum+=rho*dE;
 
