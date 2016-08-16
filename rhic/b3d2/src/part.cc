@@ -237,7 +237,7 @@ void CPart::AddAction(CAction *action){
 }
 
 void CPart::Propagate(double tau){
-	if(b3d->BJORKEN && abs(eta)>b3d->ETAMAX){
+	if(b3d->BJORKEN && fabs(eta)>b3d->ETAMAX){
 		printf("eta screwy before propagation\n");
 		printf("eta=%g\n",eta);
 	}

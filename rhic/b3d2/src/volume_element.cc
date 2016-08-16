@@ -59,7 +59,7 @@ void CvolumeElement2D::CopyEquilibriumQuantities(CvolumeElement2D *element){
 int CvolumeElement2D::MakeParts(){
 	int nparts=0;
 	CPart *part;
-	double h=P+epsilon,tau;
+	double h=P+epsilon;
 	FourVector g={1,-1,-1,-1};
 	double weight,pdotOmega,mass,et,eta,y,ran1,ran2;
 	int ispecies,alpha,beta,intweight,n,nsample=sampler->b3d->NSAMPLE; 
@@ -73,6 +73,9 @@ int CvolumeElement2D::MakeParts(){
 	CResInfoMap::iterator rpos;
 	CResInfo *resinfo;
 	CRandom *randy=sampler->randy;
+	//printf("In CvolumeElement2D::MakeParts, OmegaMax=%g,nhadrons=%g,Xscale=%g,delNtot=%g\n",Omegamax,nhadrons,Xscale,delNtot);
+	//printf("Omega=(%g,%g,%g,%g)\n",Omega[0],Omega[1],Omega[2],Omega[3]);
+	//Misc::Pause();
 
 	if(sampler->cummulative_N+delNtot > sampler->cummulative_random){
 		ispecies=0;
@@ -165,6 +168,10 @@ int CvolumeElement2D::MakeParts(){
 					}
 					y=atanh(plab[3]/plab[0]);
 					eta=(1.0-2.0*randy->ran())*sampler->ETAMAX;
+					if(fabs(eta)>1.0){
+						printf("eta nonsense,=%g\n",eta);
+						exit(1);
+					}
 					y+=eta;
 #ifdef __SAMPLER_WRITE_XY__
 					fprintf(sampler->xyfptr,"%g %g %g %g\n",r[0],r[1],r[2],eta);
@@ -277,17 +284,23 @@ int CvolumeElement2D::MakeParts_UniformXY(){
 	return nparts;
 }
 
-
 void CvolumeElement2D::CalcOmegamax(){
 	double omax,Omega2,udotOmega,u0;
-	Omegamax=0.0;
 	Omega2=Omega[0]*Omega[0]-Omega[1]*Omega[1]-Omega[2]*Omega[2];
-	for(int i=0;i<3;i++){
-		u0=sqrt(1.0+vertex[i]->ux*vertex[i]->ux+vertex[i]->uy*vertex[i]->uy);
-		udotOmega=u0*Omega[0]-vertex[i]->ux*Omega[1]-vertex[i]->uy*Omega[2];
-		omax=fabs(udotOmega+sqrt(-Omega2+udotOmega*udotOmega));
-		if(omax>Omegamax)
-			Omegamax=omax;
+	if(sampler->TRIANGLE_FORMAT){
+		Omegamax=0.0;
+		for(int i=0;i<3;i++){
+			u0=sqrt(1.0+vertex[i]->ux*vertex[i]->ux+vertex[i]->uy*vertex[i]->uy);
+			udotOmega=u0*Omega[0]-vertex[i]->ux*Omega[1]-vertex[i]->uy*Omega[2];
+			omax=fabs(udotOmega+sqrt(-Omega2+udotOmega*udotOmega));
+			if(omax>Omegamax)
+				Omegamax=omax;
+		}
+	}
+	else{
+		u0=sqrt(1.0+ux*ux+uy*uy);
+		udotOmega=u0*Omega[0]-ux*Omega[1]-uy*Omega[2];
+		Omegamax=fabs(udotOmega+sqrt(-Omega2+udotOmega*udotOmega));
 	}
 }
 
