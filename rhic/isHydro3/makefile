@@ -12,8 +12,8 @@ GSLPATH=${MADAI_GSLPATH}
 #########################################################################
 #HOPEFULLY, everything below need not be touched
 
-INC=-I ${GSLPATH}/include -Iinclude -I${CORAL_INCLUDE} -I${MADAI_HDF5_HOME}/include -I${MADAI_XDMF_HOME}/include
-LIB=-Llib -L${GSLPATH}/lib -L${INSTALLDIR}/lib -L${MADAI_XDMF_HOME}/lib
+INC=-I ${GSLPATH}/include -I include -I ${CORAL_INCLUDE}  
+LIB=-Llib -L${GSLPATH}/lib -L${INSTALLDIR}/lib 
 
 ISHYDRO3_HFILES = include/CHydro.h include/CEos.h include/CCell.h include/CMesh.h include/hydroDef.h include/fullMesh.h include/octMesh.h include/cornelius.h
 ISHYDRO3_OBJFILES = build/CEos.o build/CCell.o build/CMesh.o build/octMesh.o build/fullMesh.o build/CHydro.o build/CHydroIO.o build/cornelius.o build/CEosInitializeJosh.o build/CEosInitializeScott.o
