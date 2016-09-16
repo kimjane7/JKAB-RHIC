@@ -241,17 +241,15 @@ void CPart::Propagate(double tau){
 		printf("eta screwy before propagation\n");
 		printf("eta=%g\n",eta);
 	}
-	double t0,vz,gamma,gammav;
+	double t0;
 	CPartMap *pmap=currentmap;
 	CPartMap::iterator neighbor;
 	if(active==true){
 		eta=GetEta(tau);//y-asinh((tau0/tau)*sinh(y-eta));
 		tau0=tau;
-		gamma=cosh(eta);
-		gammav=sinh(eta);
 		t0=r[0];
-		r[0]=tau0*gamma;
-		r[3]=tau0*gammav;
+		r[0]=tau0*cosh(eta);
+		r[3]=tau0*sinh(eta);
 		r[1]+=(p[1]/p[0])*(r[0]-t0);
 		r[2]+=(p[2]/p[0])*(r[0]-t0);
 	}

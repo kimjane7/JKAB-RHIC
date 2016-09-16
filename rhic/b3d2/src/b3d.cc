@@ -65,7 +65,7 @@ void CB3D::CopyParMapPars(){
 	COOPERFRYE_WMAX=parameter::getI(parmap,"B3D_COOPERFRYE_WMAX",1);
 	HYDRO_OCTANT_SYMMETRY=parameter::getI(parmap,"HYDRO_OCTANT",2);
 	HYDRO_PURE_BJORKEN=parameter::getB(parmap,"HYDRO_PURE_BJORKEN",false);
-	BARYON_ANNIHILATION=parameter::getB(parmap,"B3D_BARYON_ANNIHILATION",true);
+	BARYON_ANNIHILATION=parameter::getB(parmap,"B3D_BARYON_ANNIHILATION",false);
 	DELNPARTSTOT=parameter::getD(parmap,"B3D_DELNPARTSTOT",1000);
 	DELNACTIONSTOT=parameter::getD(parmap,"B3D_DELNACTIONSTOT",2000);
 	NSCATT_MAX=parameter::getI(parmap,"B3D_NSCATT_MAX",0);

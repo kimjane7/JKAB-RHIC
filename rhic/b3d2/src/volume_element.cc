@@ -214,6 +214,7 @@ int CvolumeElement2D::MakeParts_UniformXY(){
 	double delN,r[3];
 	double udotOmega;
 	double delNtot=(sampler->nhadronsf)*Vmax*nsample;
+	printf("delNtot=%g, sampler->nhadronsf=%g\n",delNtot,sampler->nhadronsf);
 	CResInfoMap *resmap=&sampler->reslist->resmap;
 	CResInfoMap::iterator rpos;
 	CResInfo *resinfo;
@@ -268,7 +269,6 @@ int CvolumeElement2D::MakeParts_UniformXY(){
 				intweight=1;
 				reality=true;
 				y=atanh(p[3]/p[0]);
-				eta=(1.0-2.0*randy->ran())*sampler->ETAMAX;
 				y+=eta;
 				if(create_negparts || intweight>0){
 					part->Init(resinfo->code,r[1],r[2],TAU0,eta,p[1],p[2],mass,y,intweight,reality);

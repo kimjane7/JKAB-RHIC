@@ -556,8 +556,10 @@ void CResList::CalcEoS(double T,double &epsilon,double &P,double &nhadrons,vecto
 			maxweight[ires]=0.0;
 			boseweight[0]=0.0;
 			for(ibose=1;ibose<=nbose;ibose++){
-				if((minmass>0.0)&&(width>0.0)) freegascalc_onespecies_finitewidth(m,m1,m2,T/double(ibose),width,minmass,epsiloni,pi,densi,sigma2i,dedti,maxweighti);
-				else freegascalc_onespecies(m,T/double(ibose),epsiloni,pi,densi,sigma2i,dedti);
+				if((minmass>0.0)&&(width>0.0))
+					freegascalc_onespecies_finitewidth(m,m1,m2,T/double(ibose),width,minmass,epsiloni,pi,densi,sigma2i,dedti,maxweighti);
+				else
+					freegascalc_onespecies(m,T/double(ibose),epsiloni,pi,densi,sigma2i,dedti);
 				if(resinfoptr->code==211)
 					boseweight[ibose]=boseweight[ibose-1]+densi*degen;
 				P+=pi*degen;
@@ -571,7 +573,6 @@ void CResList::CalcEoS(double T,double &epsilon,double &P,double &nhadrons,vecto
 	}
 	for(ibose=1;ibose<=boseweight.size();ibose++)
 		boseweight[ibose]/=boseweight[nbose];
-	//printf("T=%g, epsilon=%g, P=%g, nhadrons=%g\n",T,epsilon,P,nhadrons);
 }
 
 void CResList::CalcEoS(double T,double &epsilon,double &P,double &nhadrons,double &cs2,vector<double> &density){

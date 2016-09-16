@@ -7,7 +7,6 @@ CSEInfo::CSEInfo(CB3D *b3dset){
 	DELTAU=1.0;
 	double RMAX=parameter::getD(b3d->parmap,"B3D_XYMAX",12);
 	double TAUMAX=parameter::getD(b3d->parmap,"B3D_TAUCOLLMAX",30);
-	NTAU=lrint(parameter::getD(b3d->parmap,"B3D_TAUCOLLMAX",20));
 	TAU0=parameter::getD(b3d->parmap,"SEINFO_TAU0",5);
 	NTAU=lrint(TAUMAX-TAU0);
 	ETAOVERS=0.0;
@@ -42,10 +41,10 @@ void CSEInfo::SECalc(){
 		part->Propagate(b3d->tau);
 		r=sqrt(part->r[1]*part->r[1]+part->r[2]*part->r[2]);
 		if(r<R){
-			et=sqrt(part->msquared+part->p[1]*part->p[1]+part->p[2]*part->p[2]);
+			pmag2=part->p[1]*part->p[1]+part->p[2]*part->p[2];
+			et=sqrt(part->msquared+pmag2);
 			pz=et*sinh(part->y-part->eta);
 			e=sqrt(et*et+pz*pz);
-			pmag2=part->p[1]*part->p[1]+part->p[2]*part->p[2];
 			pmag2+=pz*pz;
 			Tzz[itau]+=pz*pz/e;
 			Pbar[itau]+=pmag2/(3.0*e);
@@ -74,18 +73,18 @@ void CSEInfo::Print(){
 		tau=TAU0+itau*DELTAU;
 		volume=2.0*b3d->ETAMAX*tau*PI*R*R*NETEVENTS;
 		eta=0.75*tau*(Pbar[itau]-Tzz[itau])/volume;
-		alpha=(TAU0/tau)*sqrt(F0[itau]/F0[0]);
+		alpha=sqrt(TAU0/tau)*sqrt(F0[itau]/F0[0]);
 		printf("%5.2f %7.3f %7.3f %7.3f %7.4f %7.4f %7.4f %7.2f %7.4f %7.4f\n",
 		tau,epsilon[itau]/volume,Pbar[itau]/volume,Tzz[itau]/volume,nhadrons[itau]/volume,eta,K0[itau]/volume,F0[itau]/volume,(Pbar[itau]-Tzz[itau])/volume,alpha);
 		fprintf(fptr,"%5.2f %7.3f %7.3f %7.3f %7.4f %7.4f %7.4f %7.2f %7.4f %7.4f\n",
 		tau,epsilon[itau]/volume,Pbar[itau]/volume,Tzz[itau]/volume,nhadrons[itau]/volume,eta,K0[itau]/volume,F0[itau]/volume,(Pbar[itau]-Tzz[itau])/volume,alpha);
 		if(itau==0)
-			p0=(Pbar[itau]-Tzz[itau])/(alpha*volume);
+			p0=(Pbar[itau]-Tzz[itau])/alpha;
 		if(itau==1)
-			p1=(Pbar[itau]-Tzz[itau])/(alpha*volume);
+			p1=(Pbar[itau]-Tzz[itau])/alpha;
 		if(itau==2)
-			p2=(Pbar[itau]-Tzz[itau])/(alpha*volume);
-		printf("tau=%g, p=%g, pNS=%g, alpha=%g\n",tau,(Pbar[itau]-Tzz[itau])/(alpha*volume),(4.0/3.0)*eta/(tau*alpha),alpha);
+			p2=(Pbar[itau]-Tzz[itau])/alpha;
+		//printf("tau=%g, p=%g, pNS=%g, alpha=%g\n",tau,(Pbar[itau]-Tzz[itau])/(alpha*volume),(4.0/3.0)*eta/(tau*alpha),alpha);
 	}
 	dpizzoveralpha_dt=(2.0*p1-1.5*p0-0.5*p2)/DELTAU;
 	printf("&&&&&&&&&eta/s=%g D(pizz/alpha)/Dt=%g &&&&&&&&&&&&\n",ETAOVERS,dpizzoveralpha_dt);
