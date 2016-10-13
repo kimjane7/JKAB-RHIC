@@ -304,6 +304,14 @@ void CvolumeElement2D::CalcOmegamax(){
 	}
 }
 
+void CvolumeElement2D::CalcOmegamax3D(){
+	double Omega2,udotOmega,u0;
+	Omega2=Omega[0]*Omega[0]-Omega[1]*Omega[1]-Omega[2]*Omega[2]-Omega[3]*Omega[3];
+	u0=sqrt(1.0+ux*ux+uy*uy+uz*uz);
+	udotOmega=u0*Omega[0]-ux*Omega[1]-uy*Omega[2]-uz*Omega[3];
+	Omegamax=fabs(udotOmega+sqrt(-Omega2+udotOmega*udotOmega));
+}
+
 /*
 // This only used to fill out shear tensor in lab frame
 void CvolumeElement::FillOutShearTensor(double &pixx,double &pixy,double &pixz,double &piyy,double &piyz,double &pizz){
