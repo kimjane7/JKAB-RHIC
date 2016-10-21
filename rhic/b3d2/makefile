@@ -80,8 +80,6 @@ build/part.o\
 build/inelastic.o\
 build/resonances.o\
 build/anal_spectra.o\
-build/anal_balance.o\
-build/anal_balanceQGP.o\
 build/anal_hbt.o\
 build/anal_v2.o\
 build/consolidate.o\

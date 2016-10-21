@@ -29,11 +29,22 @@ void CHydro::spectraFromFile() {
 	time(&now);
 	printf("Finished! [%g s]\n",difftime(now,start));
 }
+void CHydro::openTeddyHyper(){
+		
+	string fm = parameter::getS(*pMap,"HYDRO_IO_TEDDYHYPER_FN","Teddyfreezeout.dat");
+	fm = mDataRoot + fm;
+	printf("opening fTeddyHyper, filename=%s\n",fm.c_str());
+			
+	fTeddyHyper = fopen(fm.c_str(),"w");
+	fprintf(fTeddyHyper,"TeddyHyper");
+	
+}
 
 void CHydro::openOscarHyper() {
 		// 1
 		//  fOscarHyper = fopen("fOscarHyper.OSCAR2008H","w");
 	string fn = parameter::getS(*pMap,"HYDRO_IO_OSCARHYPER_FN","freezeout.dat");
+
 	fn = mDataRoot + fn;
 	fOscarHyper = fopen( fn.c_str(),"w");
 	fprintf(fOscarHyper,"OSCAR2008H  ");
@@ -137,7 +148,7 @@ void CHydro::openOscarHyper() {
 	for(int idT=0;idT<=7;idT++){
 		mFoTemp+=0.01;
 		CMesh::setFOTemp(mFoTemp);
-		printOscarHyper(0);
+		printTeddyHyper(0);
 	}
 }
 
@@ -1188,6 +1199,32 @@ void CHydro::printOscarFull(int mT) {
 				}
 }
 
+bool CHydro::printTeddyHyper(int mT){
+	double mFOS[XSIZE+YSIZE][2];
+	double mFOSigma[XSIZE+YSIZE][2];
+	double mFOVelo[XSIZE+YSIZE][2];
+	double mFODiss[XSIZE+YSIZE][6];
+	int fosSize;
+	double temp = mFoTemp;
+	double ed = mEos->getEGivenT(temp);
+	
+	//fprintf(fTeddyHyper,"time: %g\n",tempMesh->getTau());
+		
+	//printf("Check printTeddyHyper A\n");
+	
+	if(mFindTeddySurface){
+		//printf("Howdy, I'm on my way inside printTeddyHyper\n");
+		if(mPureBjorken){
+			printf("DISASTER!!!!, you can't use Teddy Surface for Bj symmetry!\n");
+			exit(1);
+		}
+		double tempMesh, offMesh;
+		FindTeddySurface();
+	}
+	//printf("Check printTeddyHyper D\n");
+	return true;
+}
+
 bool CHydro::printOscarHyper(int mT) {
 	
 		// it ix [iy iz] e p T R_qgp vx [vy y_L] [n(1)...n(C)] [mu(1)...mu(C)] 
@@ -1199,17 +1236,47 @@ bool CHydro::printOscarHyper(int mT) {
 	int fosSize;
 	double temp = mFoTemp;
 	double ed = mEos->getEGivenT(temp);
+
+	/*printf("Halu\n");
+	printf(" Chaw chaw !!!");
+	fprintf(fTeddyHyper,"time: %g\n",tempMesh->getTau());
+	printf("inside printOscarHyper, checking to see if mFindTeddySurface is true\n");
+	if(mFindTeddySurface){
+		printf("Howdy, I'm on my way inside printOscarHyper\n");
+		if(mPureBjorken){
+			printf("DISASTER!!!!, you can't use Teddy Surface for Bj symmetry!\n");
+			exit(1);
+		}
+		double tempMesh, offMesh;
+		FindTeddySurface();
 	
-	fprintf(fOscarHyper,"time: %g\n",tempMesh->getTau());
-	
-	if (!mPureBjorken) {
-		for (int k=0;k<tempMesh->getNSize();k++){
-			if(!tempMesh->getFOS(k,mFOS,mFOSigma,mFOVelo,mFODiss,fosSize)){
-				fflush(fOscarHyper);
-				break;
-			}
+	}
+	*/
+		if (!mPureBjorken) {
+			for (int k=0;k<tempMesh->getNSize();k++){
+				if(!tempMesh->getFOS(k,mFOS,mFOSigma,mFOVelo,mFODiss,fosSize)){
+					fflush(fOscarHyper);
+					break;
+				}
 				
-			fprintf(fOscarHyper,"eta: %g size: %d\n",tempMesh->getX(k,0,0,3),fosSize);
+				fprintf(fOscarHyper,"eta: %g size: %d\n",tempMesh->getX(k,0,0,3),fosSize);
+				for (int i=0;i<fosSize;i++) {
+					fprintf(fOscarHyper,"%g %g ", mFOS[i][0], mFOS[i][1]);
+					fprintf(fOscarHyper,"%g %g %g 1. ",ed,mEos->getP(ed),temp);
+					for (int k=0;k<2;k++)
+						fprintf(fOscarHyper,"%g ",mFOVelo[i][k]);
+					fprintf(fOscarHyper,"0. %g %g ", mFOSigma[i][0], mFOSigma[i][1]);
+					for (int k=0;k<6;k++)
+						fprintf(fOscarHyper,"%g ",mFODiss[i][k]);
+					fprintf(fOscarHyper,"\n");
+				}
+			}
+		}
+		else {
+			if (!tempMesh->getFOS(mFOS,mFOSigma,mFOVelo,mFODiss,fosSize)){
+				fflush(fOscarHyper);
+				return false;
+			}
 			for (int i=0;i<fosSize;i++) {
 				fprintf(fOscarHyper,"%g %g ", mFOS[i][0], mFOS[i][1]);
 				fprintf(fOscarHyper,"%g %g %g 1. ",ed,mEos->getP(ed),temp);
@@ -1221,24 +1288,7 @@ bool CHydro::printOscarHyper(int mT) {
 				fprintf(fOscarHyper,"\n");
 			}
 		}
-	}
-	else {
-		if (!tempMesh->getFOS(mFOS,mFOSigma,mFOVelo,mFODiss,fosSize)){
-			fflush(fOscarHyper);
-			return false;
-		}
-		for (int i=0;i<fosSize;i++) {
-			fprintf(fOscarHyper,"%g %g ", mFOS[i][0], mFOS[i][1]);
-			fprintf(fOscarHyper,"%g %g %g 1. ",ed,mEos->getP(ed),temp);
-			for (int k=0;k<2;k++)
-				fprintf(fOscarHyper,"%g ",mFOVelo[i][k]);
-			fprintf(fOscarHyper,"0. %g %g ", mFOSigma[i][0], mFOSigma[i][1]);
-			for (int k=0;k<6;k++)
-				fprintf(fOscarHyper,"%g ",mFODiss[i][k]);
-			fprintf(fOscarHyper,"\n");
-		}
-	}
-	fflush(fOscarHyper);
+  fflush(fOscarHyper);
 	return true;
 }
 
@@ -1727,10 +1777,10 @@ void CHydro::ReadXdmf() {
 }
 
 #endif
-
 bool CHydro::mIoSpots, CHydro::mIoTechqm;
-bool CHydro::mIoOscarFull, CHydro::mIoOscarHyper, CHydro::mIoFull;
+bool CHydro::mFindTeddySurface;
+bool CHydro::mIoOscarFull, CHydro::mIoTeddyFull, CHydro::mIoOscarHyper,CHydro::mIoTeddyHyper, CHydro::mIoFull;
 bool CHydro::mIoSpectra, CHydro::mOldFile;
-int CHydro::mIoSliceTStep, CHydro::mIoTechqmTStep, CHydro::mIoOscarTStep;
+int CHydro::mIoSliceTStep, CHydro::mIoTechqmTStep, CHydro::mIoOscarTStep, CHydro::mIoTeddyTStep;
 int CHydro::mIoSpotsTStep, CHydro::mIoFullTStep;
 int CHydro::mPrintX, CHydro::mPrintY, CHydro::mPrintN;

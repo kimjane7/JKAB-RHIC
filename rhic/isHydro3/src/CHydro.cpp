@@ -20,6 +20,9 @@ CHydro::CHydro(parameterMap* pM){
 	mIoTechqm = parameter::getB(*pMap,"HYDRO_IO_TECHQM",false);
 	mIoOscarFull = parameter::getB(*pMap,"HYDRO_IO_OSCARFULL",false);
 	mIoOscarHyper = parameter::getB(*pMap,"HYDRO_IO_OSCARHYPER",false);
+	//mIoTeddyFull = parameter::getB(*pMap,"HYDRO_IO_OSCARFULL",false);
+	mIoTeddyHyper = parameter::getB(*pMap,"HYDRO_IO_TEDDYHYPER",true);
+	mFindTeddySurface = parameter::getB(*pMap,"HYDRO_IO_TEDDYSURFACE",true);
 	mIoFull = parameter::getB(*pMap,"HYDRO_IO_FULL",false);
 	mIoSpectra = parameter::getB(*pMap,"HYDRO_IO_SPECTRA",false);
 
@@ -40,11 +43,12 @@ CHydro::CHydro(parameterMap* pM){
 
 	mIoSliceTStep  = parameter::getI(*pMap,"HYDRO_IO_SLICES_TSTEP",10);
 	mIoTechqmTStep = parameter::getI(*pMap,"HYDRO_IO_TECHQM_TSTEP",10);
-	mIoOscarTStep  = parameter::getI(*pMap,"HYDRO_IO_OSCAR_TSTEP",10);
+	mIoOscarTStep  = parameter::getI(*pMap,"HYDRO_IO_OSCAR_TSTEP",1);
+	mIoTeddyTStep = parameter::getI(*pMap,"HYDRO_IO_TEDDY_TSTEP",1);
 	mIoSpotsTStep  = parameter::getI(*pMap,"HYDRO_IO_SPOTS_TSTEP",1);
 	mIoFullTStep   = parameter::getI(*pMap,"HYDRO_IO_FULL_TSTEP",100);
 	
-	mBjorken = parameter::getB(*pMap,"HYDRO_BJORKEN",true);
+	mBjorken = parameter::getB(*pMap,"HYDRO_BJORKEN",false);
 	mPureBjorken = parameter::getB(*pMap,"HYDRO_PURE_BJORKEN",false);
 	mHalving = parameter::getB(*pMap, "HYDRO_HALVING", false);
 	mOctant = parameter::getI(*pMap, "HYDRO_OCTANT", 3);
@@ -108,7 +112,7 @@ int CHydro::runHydro(){
 		printf("Expected Run Time < %0.3g sec.  \n",
 	(mXSize*mYSize*150)/5.E5);
 	fflush(stdout);
-	printf("Time Step 0 [%0.6g](elapsed time %0.6g sec) .",
+	printf("Time Step 0 [%0.6g](elapsed time %0.6g sec) .\n",
 	onMesh->getTau(),difftime(now,start)); fflush(stdout);
 	
 	nPrintUpdate=1;
@@ -160,6 +164,10 @@ int CHydro::runHydro(){
 			if (mIoOscarHyper)
 				fclose(fOscarHyper);
 			
+	  	if (mIoTeddyHyper){
+				fclose(fTeddyHyper);
+		  }
+			
 			if (mIoOscarFull)
 				fclose(fOscarFull);
 			
@@ -194,11 +202,23 @@ int CHydro::runHydro(){
 
 		if (mIoOscarFull && t%mIoOscarTStep == 0)
 			printOscarFull(t);
-
+		
+		
+		if (mIoTeddyHyper && t%mIoTeddyTStep == 0){
+		
+			oldMesh->copyMesh(tempMesh);
+			printf("tau= %g\n",tempMesh->getTau());
+			if (!printTeddyHyper(t)){
+				printf("\nILLICIT FREEZEOUT SURFACE at t=%g\n",tempMesh->getTau());
+				mIoTeddyHyper=true;  // quit trying to print FOS
+			}
+		}
 		if (mIoOscarHyper && t%mIoOscarTStep == 0){
 			tempMesh->genFOS(oldMesh);
 			oldMesh->copyMesh(tempMesh);
 			
+			//printf("In CHydro.cpp, will try to all printOscarHyper, tau=%g\n",tempMesh->getTau());
+			printf("tau= %g\n",tempMesh->getTau());
 			if (!printOscarHyper(t)){
 				printf("\nILLICIT FREEZEOUT SURFACE at t=%g\n",tempMesh->getTau());
 				mIoOscarHyper=false;  // quit trying to print FOS
@@ -236,7 +256,6 @@ int CHydro::runHydro(){
 			tempMesh = deadMesh;
 		}
 		// no reassignments for RK4
-		
 	}
 	// if we quit early, undo mesh reassignments
 	if (mRK2 && tempMesh->getT(0,0,0) > mFoTemp) {
@@ -315,6 +334,7 @@ int CHydro::runHydro(){
 }
 
 void CHydro::initializeHydro(){
+	printf("initializing hydro boss\n");
 	// Open IO Files
 	if (mIoTechqm) {
 		string temp = mDataRoot;
@@ -331,7 +351,7 @@ void CHydro::initializeHydro(){
 	}
   
 	// make main mesh
-	//printf("making main mesh...., mOctant=%d\n",mOctant);
+	printf("making main mesh...., mOctant=%d\n",mOctant);
 	oldMesh=onMesh=offMesh=tempMesh=deadMesh=k1=k2=NULL;
 	if (mOldFile) {
 		if (mOctant == 3)
@@ -362,6 +382,8 @@ void CHydro::initializeHydro(){
 	if (mInitNS != 0. || mInitNSTxxP != 0.)   
 		onMesh->initNS();
 	
+	
+	//printf("check aa\n");
 	// make additional meshes
 	//	printf("making additional meshes...\n");
 	if (mOctant == 3){
@@ -380,6 +402,7 @@ void CHydro::initializeHydro(){
 			k2 = new fullMesh(onMesh);
 		}
 	}
+	//printf("check bb\n");
 	
 	//	printf("active matching between meshes...\n");
 	offMesh->fillActiveCells();
@@ -434,8 +457,26 @@ void CHydro::initializeHydro(){
 		openFileSpots();
 		printSpots();
 	}
+	//printf("check dd\n");
 	if (mIoOscarFull) 
 		openOscarFull();
+	
+	//printf("checking mIoTeddyHyper\n");
+	if (mIoTeddyHyper) {
+		
+		openTeddyHyper();
+		if (mOctant == 3)
+			oldMesh = new octMesh(tempMesh);
+		else 
+			oldMesh = new fullMesh(tempMesh);
+   
+		string osuFN("/osuFOS.dat");
+		osuFN = mDataRoot + osuFN;
+		fOSU = fopen(osuFN.c_str(),"w");
+		oldMesh->setOsuFos(fOSU);
+		
+	}
+	
 	if (mIoOscarHyper) {
 		openOscarHyper();
 		if (mOctant == 3)
@@ -448,9 +489,11 @@ void CHydro::initializeHydro(){
 		fOSU = fopen(osuFN.c_str(),"w");
 		oldMesh->setOsuFos(fOSU);
 	}
+
 	if (mIoSlices) printSlices();
 	if (mIoFull && false)
 		printMesh();
+	printf("finishing initializeHydro\n");
 	
 }
 

@@ -1185,13 +1185,13 @@ int fullMesh::genFOS(CMesh *mMesh) {
 						fprintf(osuFOS,"%g %g %g %g ",mC.getTau(),mC.getX(1),mC.getX(2),mC.getX(3)); //1-4
 						fprintf(osuFOS,"%g %g %g %g ",surfVec[0],
 								-mC.getTau()*surfVec[1],-mC.getTau()*surfVec[2],-surfVec[3]/mC.getTau()); //5-8
-						fprintf(osuFOS,"%g %g %g ",mC.getUx(),mC.getUy(),mC.getUz()); //9-11
-						fprintf(osuFOS,"%g 0. %g 0. 0. %g ",fosE,mFOTemp,fosP);  //12-17
+							fprintf(osuFOS,"%g %g %g ",mC.getUx(),mC.getUy(),mC.getUz()); //9-11
+							fprintf(osuFOS,"%g 0. %g 0. 0. %g ",fosE,mFOTemp,fosP);  //12-17 
 						
 							// 18-21, 22-24, 25-26, 27
-						for (int i=0;i<4;i++)
-							for (int j=i;j<4;j++)
-								fprintf(osuFOS,"%g ",mC.getPixy(i,j));
+								 for (int i=0;i<4;i++)
+									 	for (int j=i;j<4;j++)
+													fprintf(osuFOS,"%g ",mC.getPixy(i,j));
 						
 #ifdef HYDRO_XDMF_OUTPUT
 						fprintf(osuFOS,"%g %d",mC.getB(),genFOSCalls); // 28-29
@@ -1202,7 +1202,7 @@ int fullMesh::genFOS(CMesh *mMesh) {
 						
 					}
 				}
-		
+								
 #ifdef HYDRO_XDMF_OUTPUT
 		genFOSCalls++;
 #endif
@@ -1269,7 +1269,7 @@ int fullMesh::genFOS(CMesh *mMesh) {
 				mC.setY(cube[0]->getX(2)+midX[2]);
 				mC.selfUpdate();
 				
-				fprintf(osuFOS,"%g %g %g %g %g %g ",mC.getTau(),mC.getX(1),mC.getX(2),surfVec[0],surfVec[1],surfVec[2]); 
+				fprintf(osuFOS,"%g %g %g %g %g %g ",mC.getTau(),mC.getX(1),mC.getX(2),surfVec[0],surfVec[1],surfVec[2]); // 1-6
 				fprintf(osuFOS,"%g %g %g 0. %g 0. 0. %g ",mC.getVx(),mC.getVy(),fosE,mFOTemp,fosP); // 7-14
 				fprintf(osuFOS,"%g %g %g %g %g %g %g\n",getTau()*getTau()*mC.getPixy(3,3),
 						mC.getPixy(0,0),mC.getPixy(0,1),mC.getPixy(0,2),
@@ -1554,4 +1554,4 @@ double fullMesh::getF( int x, int y, int n, double pt, double phi, double rap, d
 	}
 	
 	return mT*f*diffTotal;
-}
+} 

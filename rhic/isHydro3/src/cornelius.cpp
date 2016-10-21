@@ -2109,7 +2109,7 @@ void Cornelius::init(int d, double v0, double *dex)
  *
  * @param [in] filename Filename of the file where the information is printed.
  *
- */
+**/
 void Cornelius::init_print(string filename)
 {
   output_print.open(filename.c_str());

@@ -25,7 +25,7 @@
 class CMesh {
 	typedef double (CMesh::*meshMemFunc)(const double x);
 	
-protected:
+public:
 	std::list<CCell*> activeCells;
 	
 	static double ****localE4;
@@ -154,6 +154,7 @@ public:
 	inline double getE(int eta, int x, int y){return getCell(eta,x,y)->getE();}
     inline double getT(int eta, int x, int y){return getCell(eta,x,y)->getTCalc();}
     inline double getP(int eta, int x, int y){return getCell(eta,x,y)->getPCalc();}
+		//inline double getX(int eta, int x, int y);//{return getCell(eta,x,y)->getXCalc();}
 	inline double getS(int eta, int x, int y){return getCell(eta,x,y)->getSCalc();}
 	inline double getISAlpha(int eta, int x, int y){return getCell(eta,x,y)->getISAlphaCalc();}
 	inline double getISGamma(int eta, int x, int y){return getCell(eta,x,y)->getISGammaCalc();}
@@ -161,7 +162,7 @@ public:
 	inline double getTISB(int eta, int x, int y){return getCell(eta,x,y)->getTISBCalc();}
 	inline double getX(int eta, int x, int y,int i){return getCell(eta,x,y)->getX(i);}
 	inline double getTxy(int eta, int x, int y, int xx, int yy){return getCell(eta,x,y)->getTxyCalc(xx,yy);}
-    inline double getPixy(int eta, int x, int y, int xx, int yy){return getCell(eta,x,y)->getPixyCalc(xx,yy);}
+  inline double getPixy(int eta, int x, int y, int xx, int yy){return getCell(eta,x,y)->getPixyCalc(xx,yy);}
 	inline double getPixyNS(int eta, int x, int y, int xx, int yy) {return getCell(eta,x,y)->getPixyNSLocal(xx,yy);}
 	inline double getPixyNSMesh(int eta, int x, int y, int xx, int yy){return getCell(eta,x,y)->getPixyNS(xx,yy);}
 	inline double getTxx(int eta, int x, int y) {return getTxy(eta,x,y,1,1);}

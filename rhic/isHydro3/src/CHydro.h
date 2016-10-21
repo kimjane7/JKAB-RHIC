@@ -50,7 +50,7 @@ private:
 	FILE *fFOS, *fFOSL, *fFOSSST;
 	FILE *fTQMX, *fTQMY, *fTQMR;
 	FILE *fTxxL, *fTxxNSL,*fTxxML;
-	FILE *fFull, *fOscarFull, *fOscarHyper;
+	FILE *fFull, *fOscarFull, *fOscarHyper, *fTeddyHyper;
 	FILE *fPiDNDY, *fPiDNDPt;
 	FILE *fOSU;
 
@@ -65,12 +65,12 @@ private:
 	
 	static string mDataRoot, mOldFileName;
 	static bool mDebug, mIoIntegrals, mIoSlices, mIoSpots, mIoTechqm;
-	static bool mIoOscarFull, mIoOscarHyper, mIoFull, mIoSpectra, mOldFile;
+	static bool mIoOscarFull, mIoTeddyFull, mIoOscarHyper, mIoTeddyHyper, mIoFull, mIoSpectra, mOldFile;
 	static bool mSawtooth, mRK2, mRK4, mLinT, mLogT, mLogSinhT;
-	static bool mBjorken, mPureBjorken, mHalving;
+	static bool mBjorken, mPureBjorken, mHalving, mFindTeddySurface;
 	static int mOctant;
 	static int mTStep, mXSize, mYSize, mNSize, mPrintX, mPrintY, mPrintN;
-	static int mIoSliceTStep, mIoTechqmTStep, mIoOscarTStep, mIoSpotsTStep, mIoFullTStep;
+	static int mIoSliceTStep, mIoTechqmTStep, mIoOscarTStep, mIoTeddyTStep, mIoSpotsTStep, mIoFullTStep;
 	static double mInitNS, mInitNSTxxP, mInitFlow, mFoTemp, mT0, mDt, mE0;
 
 	static double intS0,intE0,sLoss,eLoss;
@@ -84,6 +84,8 @@ private:
 	void printSpots();
 	void printTQM();
 	bool printOscarHyper(int mT);
+	bool printTeddyHyper(int mT);
+	void FindTeddySurface();
 	void printOscarFull(int mT);
 	void printDNs(CMesh* lMesh,int,int,int);
 	
@@ -91,7 +93,9 @@ private:
 	void openFileSpots();
 	void openSliceFiles();
 	void openOscarHyper();
+	void openTeddyHyper();
 	void openOscarFull();
+	void openTeddyFull();
 	
 	void closeFileIntegrals();
 	void closeFileSpots();
@@ -131,6 +135,7 @@ public:
 	void spectraFromFile();
 	void printVorticity();
 	void initializeHydro();
+	void initialCondition(CCell* mCell);
 	void writeIC(); // summarized initial conditions, and writes to file
 	inline void setEos(CEos* eos_ptr) {mEos=eos_ptr;};
 };

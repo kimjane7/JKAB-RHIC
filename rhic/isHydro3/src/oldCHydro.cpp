@@ -20,7 +20,9 @@ CHydro::CHydro(parameterMap* pM) {
 	mIoSpots = parameter::getB(*pMap,"HYDRO_IO_SPOTS",false);
 	mIoTechqm = parameter::getB(*pMap,"HYDRO_IO_TECHQM",false);
 	mIoOscarFull = parameter::getB(*pMap,"HYDRO_IO_OSCARFULL",false);
+	mIoTeddyFull = parameter::getB(*pMap,"HYDRO_IO_TEDDYFULL",false);
 	mIoOscarHyper = parameter::getB(*pMap,"HYDRO_IO_OSCARHYPER",false);
+	mTeddyHyper = parameter::getB(*pMap,"HYDRO_IO_TEDDYHYPER",true);
 	mIoFull = parameter::getB(*pMap,"HYDRO_IO_FULL",false);
 	mIoSpectra = parameter::getB(*pMap,"HYDRO_IO_SPECTRA",false);
 
@@ -207,6 +209,20 @@ int CHydro::runHydro() {
 	if (mIoSpots) {
 		openFileSpots();
 		printSpots();
+	}
+	if (mIoTeddyFull) 
+		openOscarFull();
+	if (mIoTeddyHyper) {
+		openTeddyHyper();
+		if (mOctant == 3)
+			oldMesh = new octMesh(tempMesh);
+		else 
+			oldMesh = new fullMesh(tempMesh);
+
+		string osuFN("/osuFOS.dat");
+		osuFN = mDataRoot + osuFN;
+		fOSU = fopen(osuFN.c_str(),"w");
+		oldMesh->setOsuFos(fOSU);
 	}
 	if (mIoOscarFull) 
 		openOscarFull();

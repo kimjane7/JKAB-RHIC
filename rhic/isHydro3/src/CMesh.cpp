@@ -673,7 +673,7 @@ void CMesh::calcIntegrals(){
 	
 	if (mBjorken) {
 		intS *= getTau()*mDx*mDy*mDn;
-		intE *= getTau()*mDx*mDy*mDn;
+		intE *= getTau()*mDx*mDy*mDn; 
 	}
 	else {
 		intS *= mDx*mDy*mDn;

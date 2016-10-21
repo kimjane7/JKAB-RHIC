@@ -16,7 +16,7 @@ INC=-I ${GSLPATH}/include -I include -I ${CORAL_INCLUDE}
 LIB=-Llib -L${GSLPATH}/lib -L${INSTALLDIR}/lib 
 
 ISHYDRO3_HFILES = include/CHydro.h include/CEos.h include/CCell.h include/CMesh.h include/hydroDef.h include/fullMesh.h include/octMesh.h include/cornelius.h
-ISHYDRO3_OBJFILES = build/CEos.o build/CCell.o build/CMesh.o build/octMesh.o build/fullMesh.o build/CHydro.o build/CHydroIO.o build/cornelius.o build/CEosInitializeJosh.o build/CEosInitializeScott.o
+ISHYDRO3_OBJFILES = build/CEos.o build/CCell.o build/CMesh.o build/octMesh.o build/fullMesh.o build/CHydro.o build/CHydroIO.o build/teddy.o build/cornelius.o build/CEosInitializeJosh.o build/CEosInitializeScott.o
 
 ishydro3 : ishydro3_dirs ${ISHYDRO3_HFILES} lib/libishydro3.a
 
@@ -88,6 +88,9 @@ build/CHydro.o : ${ISHYDRO3_HFILES} src/CHydro.cpp
 
 build/CHydroIO.o : ${ISHYDRO3_HFILES} src/CHydroIO.cpp
 	${CPP} -c ${OPT} ${INC} src/CHydroIO.cpp -o build/CHydroIO.o
+	
+build/teddy.o : ${ISHYDRO3_HFILES} src/teddy.cpp
+		${CPP} -c ${OPT} ${INC} src/teddy.cpp -o build/teddy.o
 
 build/CEosInitializeJosh.o : ${ISHYDRO3_HFILES} src/CEosInitializeJosh.cpp
 	${CPP} -c ${OPT} ${INC} src/CEosInitializeJosh.cpp -o build/CEosInitializeJosh.o
