@@ -265,7 +265,7 @@ int CvolumeElement2D::MakeParts_UniformXY(){
 					rmag=sqrt(r[1]*r[1]+r[2]*r[2]);
 				} while(rmag>Rmax);
 				r[0]=TAU0*cosh(eta);
-					
+
 				intweight=1;
 				reality=true;
 				y=atanh(p[3]/p[0]);

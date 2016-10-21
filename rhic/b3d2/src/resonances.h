@@ -52,6 +52,7 @@ public:
 	double GenerateThermalMass(double maxweight, double T);
 	CResInfo();
 	static CRandom *ranptr;
+	static CB3D *b3d;
 };
 
 class CResList{

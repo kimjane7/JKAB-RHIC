@@ -38,7 +38,8 @@ namespace Misc{
 	int Sign(int a);
 	void outsidelong(double *pa,double *pb,double &qinv,double &qout,double &qside,double &qlong);
 	double GetQinv(double *pa,double *pb);
-	double GetRapidity(double *pa);
+	//double GetQinv(double *pa,double *pb);
+	double GetRapidity(double *p);
 	double GetDely(double *pa,double *pb);
 
 	complex<double> cexp(complex<double> z);

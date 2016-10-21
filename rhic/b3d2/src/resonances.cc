@@ -3,6 +3,7 @@
 #include "b3d.h"
 
 CB3D *CResList::b3d=NULL;
+CB3D *CResInfo::b3d=NULL;
 
 CResList::CResList(){
 	if(b3d!=NULL){
@@ -146,7 +147,7 @@ bool CResInfo::CheckForNeutral(){
 
 double CResInfo::GenerateMass(){
 	double m;
-	double alpha=0.5;
+	double alpha=b3d->RESWIDTH_ALPHA;;
 	if(decay){
 		double m1=branchlist[0]->resinfoptr[0]->mass;
 		double m2=0.0;
@@ -174,7 +175,7 @@ double CResInfo::GenerateMass(){
 
 double CResInfo::GenerateThermalMass(double maxweight, double T){
 	double m,kr;
-	double alpha=0.5;
+	double alpha=b3d->RESWIDTH_ALPHA;;
 	if(decay){
 		double m1=branchlist[0]->resinfoptr[0]->mass;
 		double m2=0.0;
@@ -276,7 +277,7 @@ void CResList::freegascalc_onespecies_finitewidth(double resmass, double m1, dou
 	double kr,k,E,E0,dE,gamma,rho,percent,dp,closest;
 	double sum=0.0,esum=0.0,psum=0.0,dsum=0.0,sigsum=0.0,dedtsum=0.0;
 	double n0,resn0,lor,weight;
-	double alpha=0.5;
+	double alpha=b3d->RESWIDTH_ALPHA;;
 	dE=1.0;
 	percent=0.001;
 	dp=0.002;
@@ -481,11 +482,13 @@ void CResList::CalcEoS(double T0,double Tf,double delT){
 	CResInfo *resinfoptr;
 	CResInfoMap::iterator rpos;
 	printf("#_____________________\n#  T       s         P        epsilon\n");
-	double T,P,epsilon,s,m,m1,m2,degen; int n;
-	double pi,epsiloni,densi,sigma2i,dedti,si;
+	double T,P=0.0,epsilon=0.0,dedT=0.0,dens=0.0,s,m,m1,m2,degen;
+	int n;
+	double pi,epsiloni,densi,sigma2i,dedti,si,cs2i;
 	double minmass,width,maxweighti;
+	printf("   T         s         P         epsilon     nh      cs^2\n");
 	for(T=T0;T<Tf+0.00000001;T+=delT){
-		P=epsilon=s=0.0;
+		P=epsilon=s=dens=dedT=0.0;
 		for(rpos=resmap.begin();rpos!=resmap.end();rpos++){
 			resinfoptr=rpos->second;
 			if(resinfoptr->code!=22){
@@ -500,14 +503,21 @@ void CResList::CalcEoS(double T0,double Tf,double delT){
 				}
 				degen=2.0*resinfoptr->spin+1.0;
 				m=resinfoptr->mass;
+				
 				if((minmass>0.0)&&(width>0.0)) freegascalc_onespecies_finitewidth(m,m1,m2,T,width,minmass,epsiloni,pi,densi,sigma2i,dedti,maxweighti);
 				else freegascalc_onespecies(m,T,epsiloni,pi,densi,sigma2i,dedti);
+				
+				//freegascalc_onespecies(m,T,epsiloni,pi,densi,sigma2i,dedti);
+				
 				P+=pi*degen;
+				dedT+=dedti*degen;
 				epsilon+=epsiloni*degen;
+				dens+=densi*degen;
 				s+=(pi+epsiloni)*degen/T;
 			}
 		}
-		printf("%6.2f %15.10e %15.10e %15.10e\n",T,s,P,epsilon);
+		//printf("m=%g, dens=%g, P/T=%g\n",m,dens,P/T);
+		printf("%6.2f %10.4e %10.4e %10.4e %10.4e %10.4e\n",T,s,P,epsilon,dens,s/dedT);
 	}
 }
 
@@ -715,8 +725,8 @@ void CResList::CalcEosandKubo(double T,double &epsilon,double &P,double &nhadron
 	P=epsilon=nhadrons=dedt=kubo=0.0;
 	density.clear();
 	nres=resmap.size();
-	if(GetResInfoPtr(22)->code==22)
-		nres-=1;
+	//if(GetResInfoPtr(22)->code==22)
+	//	nres-=1;
 	density.resize(nres);
 	for(rpos=resmap.begin();rpos!=resmap.end();rpos++){
 		resinfoptr=rpos->second;

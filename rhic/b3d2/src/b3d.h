@@ -99,6 +99,7 @@ public:
 	int DELNPARTSTOT,DELNACTIONSTOT;
 	bool BINARY_RW;
 	double SIGMAMAX,SIGMADEFAULT, SIGMAINELASTIC, Q0; // cross sections in sq. fm
+	double RESWIDTH_ALPHA; // sets spectral function for res widths
 	string input_dataroot;
 	string output_dataroot;
 	string run_name,qualifier;

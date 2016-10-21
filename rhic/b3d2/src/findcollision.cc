@@ -82,7 +82,7 @@ bool CB3D::FindCollision(CPart *part1,CPart *part2,double &taucoll){
 				if(taucoll>tau && taucoll<part1->tauexit && taucoll<part2->tauexit && taucoll<TAUCOLLMAX){
 					if(SECALC){
 						double r2bar=0.25*(x1+x2)*(x1+x2)+0.25*(y1+y2)*(y1+y2);
-						if(r2bar<SEinfo->R*SEinfo->R){
+						if(r2bar<SEinfo->RMAX*SEinfo->RMAX){
 							AddAction_Collision(part1,part2,taucoll,pibsquared);
 							collide=true;
 						}
