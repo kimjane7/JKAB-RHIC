@@ -16,7 +16,7 @@ public:
 	FourVector Omega; // volume elements (four-vectors)
 	double Omegamax;
 	Cvertex2D *vertex[3]; //vertices of triangle
-	double x,y,tau,ux,uy;
+	double x,y,tau,eta,ux,uy,uz;
 	double **pitilde; // shear tensor
 	CvolumeElement2D();
 	void Initialize();
@@ -27,6 +27,7 @@ public:
 	void FillOutShearTensor(double &pixx,double &pixy,double &pixz,double &piyy,double &piyz,double &pizz);
 	void Print();
 	void CalcOmegamax();
+	void CalcOmegamax3D();
 	int MakeParts();
 	int MakeParts_UniformXY();
 	static Csampler *sampler;
