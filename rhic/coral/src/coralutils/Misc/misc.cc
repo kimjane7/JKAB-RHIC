@@ -84,6 +84,18 @@ double Misc::GetDely(double *pa,double *pb){
 	return GetRapidity(pa)-GetRapidity(pb);
 }
 
+double Misc::GetQinv(double *pa,double *pb){
+	double answer;
+	answer=0;
+	answer=pow(pa[1]-pb[1],2)+pow(pa[2]-pb[2],2)+pow(pa[3]-pb[3],2)-pow(pa[0]-pb[0],2);
+	if(answer<0.0){
+		cout << "DISASTER with GetQinv, wrong sign, = " <<answer << endl;
+		exit(1);
+	}
+	return sqrt(answer);
+}
+
+/*
 double Misc::GetQinv(double *pa, double *pb){
 	double answer;
 	answer=0;
@@ -94,6 +106,7 @@ double Misc::GetQinv(double *pa, double *pb){
 	}
 	return sqrt(answer);
 }
+*/
 
 complex<double> Misc::cexp(complex<double> z){
 	return exp(real(z))*ceiphi(imag(z));

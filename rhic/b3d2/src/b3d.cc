@@ -21,6 +21,7 @@ CB3D::CB3D(string run_name_set){
 	ibalmax=0;
 	npartstot=nactionstot=0;
 	CResList::b3d=this;
+	CResInfo::b3d=this;
 	CPart::b3d=this;
 	tau=0.0;
 	npartstot=nactionstot=0;
@@ -65,9 +66,10 @@ void CB3D::CopyParMapPars(){
 	COOPERFRYE_WMAX=parameter::getI(parmap,"B3D_COOPERFRYE_WMAX",1);
 	HYDRO_OCTANT_SYMMETRY=parameter::getI(parmap,"HYDRO_OCTANT",2);
 	HYDRO_PURE_BJORKEN=parameter::getB(parmap,"HYDRO_PURE_BJORKEN",false);
-	BARYON_ANNIHILATION=parameter::getB(parmap,"B3D_BARYON_ANNIHILATION",true);
+	BARYON_ANNIHILATION=parameter::getB(parmap,"B3D_BARYON_ANNIHILATION",false);
 	DELNPARTSTOT=parameter::getD(parmap,"B3D_DELNPARTSTOT",1000);
 	DELNACTIONSTOT=parameter::getD(parmap,"B3D_DELNACTIONSTOT",2000);
+	RESWIDTH_ALPHA=parameter::getD(parmap,"B3D_RESWIDTH_ALPHA",0.5);
 	NSCATT_MAX=parameter::getI(parmap,"B3D_NSCATT_MAX",0);
 	USE_OLD_SAMPLER=parameter::getB(parmap,"B3D_USE_OLD_SAMPLER",false);
 	BINARY_RW=parameter::getB(parmap,"B3D_BINARY_RW",false);
@@ -263,7 +265,7 @@ void CB3D::Reset(){
 	if(SECALC){
 		SEinfo->NETEVENTS+=NSAMPLE;
 		SEinfo->ETAOVERS=parameter::getD(parmap,"SEINFO_ETAOVERS",0.3);
-		for(itau=0;itau<SEinfo->NTAU;itau++){
+		for(itau=0;itau<=SEinfo->NTAU;itau++){
 			AddAction_SECalc(SEinfo->TAU0+SEinfo->DELTAU*itau);
 		}
 	}

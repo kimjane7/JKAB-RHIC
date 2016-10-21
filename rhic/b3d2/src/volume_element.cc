@@ -214,6 +214,7 @@ int CvolumeElement2D::MakeParts_UniformXY(){
 	double delN,r[3];
 	double udotOmega;
 	double delNtot=(sampler->nhadronsf)*Vmax*nsample;
+	printf("delNtot=%g, sampler->nhadronsf=%g\n",delNtot,sampler->nhadronsf);
 	CResInfoMap *resmap=&sampler->reslist->resmap;
 	CResInfoMap::iterator rpos;
 	CResInfo *resinfo;
@@ -264,11 +265,10 @@ int CvolumeElement2D::MakeParts_UniformXY(){
 					rmag=sqrt(r[1]*r[1]+r[2]*r[2]);
 				} while(rmag>Rmax);
 				r[0]=TAU0*cosh(eta);
-					
+
 				intweight=1;
 				reality=true;
 				y=atanh(p[3]/p[0]);
-				eta=(1.0-2.0*randy->ran())*sampler->ETAMAX;
 				y+=eta;
 				if(create_negparts || intweight>0){
 					part->Init(resinfo->code,r[1],r[2],TAU0,eta,p[1],p[2],mass,y,intweight,reality);
@@ -302,6 +302,14 @@ void CvolumeElement2D::CalcOmegamax(){
 		udotOmega=u0*Omega[0]-ux*Omega[1]-uy*Omega[2];
 		Omegamax=fabs(udotOmega+sqrt(-Omega2+udotOmega*udotOmega));
 	}
+}
+
+void CvolumeElement2D::CalcOmegamax3D(){
+	double Omega2,udotOmega,u0;
+	Omega2=Omega[0]*Omega[0]-Omega[1]*Omega[1]-Omega[2]*Omega[2]-Omega[3]*Omega[3];
+	u0=sqrt(1.0+ux*ux+uy*uy+uz*uz);
+	udotOmega=u0*Omega[0]-ux*Omega[1]-uy*Omega[2]-uz*Omega[3];
+	Omegamax=fabs(udotOmega+sqrt(-Omega2+udotOmega*udotOmega));
 }
 
 /*

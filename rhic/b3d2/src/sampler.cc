@@ -252,6 +252,58 @@ void Csampler::ReadVolumeElements2D_Jaki(){
 	printf("Exiting happily\n");
 }
 
+void Csampler::ReadVolumeElements3D(){
+	string filename;
+	CvolumeElement2D *elem;
+	double pixx, pixy, pixz, piyy, piyz, pizz;
+	
+	int ielement, initarraysize=1000;
+	element.clear();
+	ielement=0;
+	nelements=0;
+
+	filename="model_output/"+b3d->run_name+"/"+b3d->qualifier+"/hydro3D.dat";
+	printf("\n***opening %s***\n\n", filename.c_str());
+	FILE *fptr=fopen(filename.c_str(),"r");
+
+	while(!feof(fptr)){
+		if(element.size()==ielement)
+			element.resize(element.size()+initarraysize);
+		elem=&element[ielement];
+
+		fscanf(fptr,"%lf %lf %lf %lf",&elem->tau,&elem->eta,&elem->x,&elem->y);
+		fscanf(fptr,"%lf %lf %lf",&(elem->ux),&(elem->uy),&(elem->uz));
+		fscanf(fptr,"%lf %lf %lf %lf",&(elem->Omega[0]),&(elem->Omega[1]),&(elem->Omega[2]),&(elem->Omega[3]));
+		fscanf(fptr,"%lf %lf %lf %lf %lf %lf",&pixx,&pixy,&pixz,&piyy,&piyz,&pizz);
+		
+		printf("%lf %lf %lf %lf",elem->tau,elem->eta,elem->x,elem->y);
+		printf("%lf %lf %lf",elem->ux,elem->uy,elem->uz);
+		printf("%lf %lf %lf %lf",elem->Omega[0],elem->Omega[1],elem->Omega[2],elem->Omega[3]);
+		printf("%lf %lf %lf %lf %lf %lf\n",pixx,pixy,pixz,piyy,piyz,pizz);
+		
+		elem->epsilon=epsilonf;
+		elem->density=&densityf;
+		elem->P=Pf;
+		elem->lambda=lambdaf;
+		elem->nhadrons=nhadronsf;
+
+		elem->pitilde[1][1]=pixx;
+		elem->pitilde[1][2]=elem->pitilde[2][1]=pixy;
+		elem->pitilde[1][3]=elem->pitilde[3][1]=pixz;
+		elem->pitilde[2][2]=piyy;
+		elem->pitilde[2][3]=elem->pitilde[3][2]=piyz;
+		elem->pitilde[3][3]=pizz;
+
+		printf("[%lf %lf %lf]\n",elem->pitilde[1][1],elem->pitilde[1][2],elem->pitilde[1][3]);
+		printf("[%lf %lf %lf]\n",elem->pitilde[2][1],elem->pitilde[2][2],elem->pitilde[2][3]);
+		printf("[%lf %lf %lf]\n",elem->pitilde[3][1],elem->pitilde[3][2],elem->pitilde[3][3]);
+
+		printf("ielement=%d\n",ielement);
+		ielement+=1;
+	}
+	nelements=ielement;
+}
+
 double Csampler::GetLambda(double T,double P,double epsilon){
 	int iQ,n,i;
 	const int nmax=70;
