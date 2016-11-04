@@ -3,12 +3,19 @@
 #include "b3d.h"
 
 CB3D *CResList::b3d=NULL;
-CB3D *CResInfo::b3d=NULL;
+CResList *CResInfo::reslist=NULL;
 
 CResList::CResList(){
 	if(b3d!=NULL){
 		parmap=&(b3d->parmap);
+		RESWIDTH_ALPHA=parameter::getD(*parmap,"B3D_RESWIDTH_ALPHA",0.5);
+		RESONANCE_DECAYS=parameter::getB(*parmap,"B3D_RESONANCE_DECAYS",true);
+		CResInfo::reslist=this;
 		ReadResInfo();
+	}
+	else{
+		printf("This CResList Constructor needs b3d pointer to work\n");
+		exit(1);
 	}
 }
 
@@ -25,6 +32,9 @@ CResList::~CResList(){
 
 CResList::CResList(parameterMap* parmap_in){
 	parmap=parmap_in;
+	RESWIDTH_ALPHA=parameter::getD(*parmap,"B3D_RESWIDTH_ALPHA",0.5);
+	RESONANCE_DECAYS=parameter::getB(*parmap,"B3D_RESONANCE_DECAYS",true);
+	CResInfo::reslist=this;
 	ReadResInfo();
 }
 
@@ -147,7 +157,7 @@ bool CResInfo::CheckForNeutral(){
 
 double CResInfo::GenerateMass(){
 	double m;
-	double alpha=b3d->RESWIDTH_ALPHA;;
+	double alpha=reslist->RESWIDTH_ALPHA;;
 	if(decay){
 		double m1=branchlist[0]->resinfoptr[0]->mass;
 		double m2=0.0;
@@ -163,10 +173,10 @@ double CResInfo::GenerateMass(){
 			double k=sqrt(pow((m*m-m1*m1-m2*m2),2.0)-pow((2.0*m1*m2),2.0))/(2.0*m);
 			double gamma=width*pow((2.0*k*k)/(k*k+kr*kr),alpha);
 			double rho=(2.0/(width*PI))*(0.25*gamma*gamma)/((0.25*gamma*gamma)+(mass-m)*(mass-m));
-	        double lor = (width/(2*PI))/(pow(width/2,2.0) + pow(mass-m,2.0));
-	        double weight = rho/(lor*8.0);
-	        r = ranptr->ran();
-	        if (r < weight) i = 1; 
+			double lor = (width/(2*PI))/(pow(width/2,2.0) + pow(mass-m,2.0));
+			double weight = rho/(lor*8.0);
+			r = ranptr->ran();
+			if (r < weight) i = 1; 
 		}
 	}
 	else m=mass;
@@ -175,7 +185,7 @@ double CResInfo::GenerateMass(){
 
 double CResInfo::GenerateThermalMass(double maxweight, double T){
 	double m,kr;
-	double alpha=b3d->RESWIDTH_ALPHA;;
+	double alpha=reslist->RESWIDTH_ALPHA;
 	if(decay){
 		double m1=branchlist[0]->resinfoptr[0]->mass;
 		double m2=0.0;
@@ -195,7 +205,7 @@ double CResInfo::GenerateThermalMass(double maxweight, double T){
 			double k=sqrt(pow((m*m-m1*m1-m2*m2),2.0)-pow((2.0*m1*m2),2.0))/(2.0*m);
 			double gamma=width*pow((2.0*k*k)/(k*k+kr*kr),alpha);
 			double rho=(2.0/(width*PI))*(0.25*gamma*gamma)/((0.25*gamma*gamma)+(mass-m)*(mass-m));
-	        double lor = (width/(2*PI))/(pow(width/2,2.0) + pow(mass-m,2.0));
+			double lor = (width/(2*PI))/(pow(width/2,2.0) + pow(mass-m,2.0));
 			double k2 = gsl_sf_bessel_Kn(2,(m/T)); // K2 value
 			double weight = rho*k2*m*m/(lor*k2mr*mass*mass*maxweight);
 			if (r2 < weight) i = 1; // success
@@ -214,24 +224,24 @@ void CResInfo::Print(){
 
 /*
 void CResList::freegascalc_onespecies_offshell(CResInfo *resinfo,double T,double &epsilon,double &P,double &dens,double &sigma2,double &dedt){
-	double width=resinfo->width;
-	double mass=resinfo->GenerateThermalMass(T);
-	double minmass=resinfo->minmass;
-	double wtot=0.0,w;
-	double m0,dm=0.25*width;
-	double dP,depsilon,ddens,dsigma2,ddedt;
-	epsilon=P=dens=sigma2=dedt=0.0;
-	if(width/T<0.01){
-		freegascalc_onespecies(mass,T,epsilon,P,dens,sigma2,dedt);
-	}
-	else{
-		m0=mass-4.0*width;
-		if(m0<minmass)
-			m0=minmass;
-		while(m0<mass+4.0*width){
-			Misc::Pause();
-		}
-	}
+double width=resinfo->width;
+double mass=resinfo->GenerateThermalMass(T);
+double minmass=resinfo->minmass;
+double wtot=0.0,w;
+double m0,dm=0.25*width;
+double dP,depsilon,ddens,dsigma2,ddedt;
+epsilon=P=dens=sigma2=dedt=0.0;
+if(width/T<0.01){
+freegascalc_onespecies(mass,T,epsilon,P,dens,sigma2,dedt);
+}
+else{
+m0=mass-4.0*width;
+if(m0<minmass)
+m0=minmass;
+while(m0<mass+4.0*width){
+Misc::Pause();
+}
+}
 }
 */
 
@@ -269,15 +279,13 @@ void CResList::freegascalc_onespecies(double m,double T,double &epsilon,double &
 	}
 }
 
-
-
 void CResList::freegascalc_onespecies_finitewidth(double resmass, double m1, double m2, double T, double width,
-	double minmass,double &epsilon,double &P,double &dens,double &sigma2,double &dedt,double &maxweight){
+double minmass,double &epsilon,double &P,double &dens,double &sigma2,double &dedt,double &maxweight){
 
 	double kr,k,E,E0,dE,gamma,rho,percent,dp,closest;
 	double sum=0.0,esum=0.0,psum=0.0,dsum=0.0,sigsum=0.0,dedtsum=0.0;
 	double n0,resn0,lor,weight;
-	double alpha=b3d->RESWIDTH_ALPHA;;
+	double alpha=RESWIDTH_ALPHA;
 	dE=1.0;
 	percent=0.001;
 	dp=0.002;
@@ -289,7 +297,6 @@ void CResList::freegascalc_onespecies_finitewidth(double resmass, double m1, dou
 	closest=1000.0;
 	E0=m1+m2;
 	maxweight=0.0;
-
 	kr=sqrt(pow((resmass*resmass-m1*m1-m2*m2),2.0)-4.0*m1*m1*m2*m2)/(2.0*resmass);
 
 	for(E=(m1+m2+0.5*dE);E<2.0*resmass;E+=dE){
@@ -325,145 +332,139 @@ void CResList::freegascalc_onespecies_finitewidth(double resmass, double m1, dou
 	sigma2=sigsum/sum;
 	dedt=dedtsum/sum;
 
-	//printf("m=%lf\tw=%lf\tm1=%lf\tm2=%lf\ttest=%10.9lf\tfinite=%10.9lf\n",resmass,width,m1,m2,Ltest/sum,dens);
-
 }
 
 void CResList::ReadResInfo(){
-CMerge *merge;
-int mothercode,code,decay,strange,charge,baryon,NResonances;
-double mass,mothermass,spin,width,bsum,netm,qR2,bmax;
-int ires,jres,ires1,ires2,iresflip,ichannel,nchannels,ibody,nbodies,length, LDecay, i_inel;
-int netq,netb,nets, netg, G_Parity;
-string name, filename;
-CResInfo *resinfoptr=NULL,*oldresinfoptr=NULL, *resinfoptr_1 = NULL;
-CBranchInfo *bptr=NULL,*oldbptr=NULL,*firstbptr=NULL;
-FILE *resinfofile;
-FILE * decayinfofile;
-char dummy[200],cname[200];
-filename=parameter::getS(*parmap,"B3D_RESONANCES_INFO_FILE",string("resinfo/resonances_standardhadrons.dat"));
-printf("will read res info from %s\n",filename.c_str());
-resinfofile=fopen(filename.c_str(),"r");
-fgets(dummy,200,resinfofile);
-fgets(dummy,200,resinfofile);
-fgets(dummy,200,resinfofile);
-fscanf(resinfofile,"%d",&NResonances);
-fgets(dummy,200,resinfofile);
-printf("NResonances=%d\n",NResonances);
-MergeArray=new CMerge **[NResonances];
-SigmaMaxArray=new double *[NResonances];
-for(ires=0;ires<NResonances;ires++){
-	MergeArray[ires]=new CMerge *[NResonances];
-	SigmaMaxArray[ires]=new double[NResonances];
+	CMerge *merge;
+	int mothercode,code,decay,strange,charge,baryon,NResonances;
+	double mass,mothermass,spin,width,bsum,netm,qR2,bmax;
+	int ires,jres,ires1,ires2,iresflip,ichannel,nchannels,ibody,nbodies,length, LDecay, i_inel;
+	int netq,netb,nets, netg, G_Parity;
+	string name, filename;
+	CResInfo *resinfoptr=NULL,*oldresinfoptr=NULL, *resinfoptr_1 = NULL;
+	CBranchInfo *bptr=NULL,*oldbptr=NULL,*firstbptr=NULL;
+	FILE *resinfofile;
+	FILE * decayinfofile;
+	char dummy[200],cname[200];
+	filename=parameter::getS(*parmap,"B3D_RESONANCES_INFO_FILE",string("resinfo/resonances_standardhadrons.dat"));
+	printf("will read res info from %s\n",filename.c_str());
+	resinfofile=fopen(filename.c_str(),"r");
+	fgets(dummy,200,resinfofile);
+	fgets(dummy,200,resinfofile);
+	fgets(dummy,200,resinfofile);
+	fscanf(resinfofile,"%d",&NResonances);
+	fgets(dummy,200,resinfofile);
+	MergeArray=new CMerge **[NResonances];
+	SigmaMaxArray=new double *[NResonances];
+	for(ires=0;ires<NResonances;ires++){
+		MergeArray[ires]=new CMerge *[NResonances];
+		SigmaMaxArray[ires]=new double[NResonances];
 		for(jres=0;jres<NResonances;jres++){
 			MergeArray[ires][jres]=NULL;
 			SigmaMaxArray[ires][jres]=0.0;
 		}
-}
-for(ires=0;ires<NResonances;ires++){
-	resinfoptr=new CResInfo();
-	fscanf(resinfofile,"%d %lf %d %d %d %lf %d %d %lf", &resinfoptr->code,&resinfoptr->mass,&resinfoptr->charge,&resinfoptr->baryon, &resinfoptr->strange,&resinfoptr->spin,&resinfoptr->G_Parity,&decay,&resinfoptr->width);
-	fgets(cname,100,resinfofile);
-	cname[int(strlen(cname))-1]='\0';
-	resinfoptr->name=cname;
-	resinfoptr->decay=bool(decay);
-	if(b3d!=NULL){
-		if(!b3d->RESONANCE_DECAYS) resinfoptr->decay=false;
 	}
-	resinfoptr->ires=ires;
-	resinfoptr->branchlist.clear();
-	if(!resinfoptr->decay && decay==1){
-		printf("decay turned off\n");
-		resinfoptr->Print();
-	}
-	resmap.insert(CResInfoPair(resinfoptr->code,resinfoptr));
-} 
-fclose(resinfofile);
-
-filename=parameter::getS(*parmap,"B3D_RESONANCES_DECAYS_FILE",string("resinfo/decays_pdg_weak.dat"));
-printf("will read decay info from %s\n",filename.c_str());
-decayinfofile=fopen(filename.c_str(),"r");
-while(fscanf(decayinfofile,"%d %lf",&mothercode,&mothermass) && !feof(decayinfofile)){
-	fgets(dummy,200,decayinfofile);
-	fscanf(decayinfofile,"%d %d",&mothercode,&nchannels);
-	resinfoptr=GetResInfoPtr(mothercode);
-	resinfoptr->minmass=1.0E10;
-	bsum=0.0;
-	bmax=0.0;
-	for(ichannel=0;ichannel<nchannels;ichannel++){
-		bptr=new CBranchInfo();
-		bptr->resinfoptr.clear();
-		resinfoptr->branchlist.push_back(bptr);
-		fscanf(decayinfofile,"%d",&nbodies);
-		netq=-resinfoptr->charge;
-		netb=-resinfoptr->baryon;
-		nets=-resinfoptr->strange;
-		netm=0.0;
-		for(ibody=0;ibody<nbodies;ibody++){
-			fscanf(decayinfofile,"%d",&code);
-			bptr->resinfoptr.push_back(GetResInfoPtr(code));
-			netq+=bptr->resinfoptr[ibody]->charge;
-			netb+=bptr->resinfoptr[ibody]->baryon;
-			nets+=bptr->resinfoptr[ibody]->strange;
-			netm+=bptr->resinfoptr[ibody]->mass;
-		} 
-		//total charge and baryon number should be conserved, and shouldn't be larger than single strangeness
-		if(netq!=0 || netb!=0 || abs(nets)>1){
-			printf("Charge conservation failure while reading decay info,\nnetq=%d, netb=%d, nets=%d\n",netq,netb,nets);
-			printf("MOTHER (ichannel=%d, nbodies=%d):\n",ichannel,nbodies);
+	for(ires=0;ires<NResonances;ires++){
+		resinfoptr=new CResInfo();
+		fscanf(resinfofile,"%d %lf %d %d %d %lf %d %d %lf", &resinfoptr->code,&resinfoptr->mass,&resinfoptr->charge,&resinfoptr->baryon, &resinfoptr->strange,&resinfoptr->spin,&resinfoptr->G_Parity,&decay,&resinfoptr->width);
+		fgets(cname,100,resinfofile);
+		cname[int(strlen(cname))-1]='\0';
+		resinfoptr->name=cname;
+		resinfoptr->decay=bool(decay);
+		if(RESONANCE_DECAYS) resinfoptr->decay=false;
+		resinfoptr->ires=ires;
+		resinfoptr->branchlist.clear();
+		if(!resinfoptr->decay && decay==1){
 			resinfoptr->Print();
-			printf("DAUGHTERS:\n");
-			for(ibody=0;ibody<nbodies;ibody++)
-				bptr->resinfoptr[ibody]->Print();
-			if(netq!=0 || netb!=0)
-				exit(1);
 		}
-		fscanf(decayinfofile,"%lf %d",&bptr->branching,&LDecay);
-		//store two body decays only
-		if(nbodies==2){
+		resmap.insert(CResInfoPair(resinfoptr->code,resinfoptr));
+	} 
+	fclose(resinfofile);
+
+	filename=parameter::getS(*parmap,"B3D_RESONANCES_DECAYS_FILE",string("resinfo/decays_pdg_weak.dat"));
+	printf("will read decay info from %s\n",filename.c_str());
+	decayinfofile=fopen(filename.c_str(),"r");
+	while(fscanf(decayinfofile,"%d %lf",&mothercode,&mothermass) && !feof(decayinfofile)){
+		fgets(dummy,200,decayinfofile);
+		fscanf(decayinfofile,"%d %d",&mothercode,&nchannels);
+		resinfoptr=GetResInfoPtr(mothercode);
+		resinfoptr->minmass=1.0E10;
+		bsum=0.0;
+		bmax=0.0;
+		for(ichannel=0;ichannel<nchannels;ichannel++){
+			bptr=new CBranchInfo();
+			bptr->resinfoptr.clear();
+			resinfoptr->branchlist.push_back(bptr);
+			fscanf(decayinfofile,"%d",&nbodies);
+			netq=-resinfoptr->charge;
+			netb=-resinfoptr->baryon;
+			nets=-resinfoptr->strange;
+			netm=0.0;
+			for(ibody=0;ibody<nbodies;ibody++){
+				fscanf(decayinfofile,"%d",&code);
+				bptr->resinfoptr.push_back(GetResInfoPtr(code));
+				netq+=bptr->resinfoptr[ibody]->charge;
+				netb+=bptr->resinfoptr[ibody]->baryon;
+				nets+=bptr->resinfoptr[ibody]->strange;
+				netm+=bptr->resinfoptr[ibody]->mass;
+			} 
+			//total charge and baryon number should be conserved, and shouldn't be larger than single strangeness
+			if(netq!=0 || netb!=0 || abs(nets)>1){
+				printf("Charge conservation failure while reading decay info,\nnetq=%d, netb=%d, nets=%d\n",netq,netb,nets);
+				printf("MOTHER (ichannel=%d, nbodies=%d):\n",ichannel,nbodies);
+				resinfoptr->Print();
+				printf("DAUGHTERS:\n");
+				for(ibody=0;ibody<nbodies;ibody++)
+					bptr->resinfoptr[ibody]->Print();
+				if(netq!=0 || netb!=0)
+					exit(1);
+			}
+			fscanf(decayinfofile,"%lf %d",&bptr->branching,&LDecay);
+			//store two body decays only
+			if(nbodies==2){
 				ires1=bptr->resinfoptr[0]->ires;
 				ires2=bptr->resinfoptr[1]->ires;
 				if(ires1>ires2){
 					iresflip=ires1; ires1=ires2; ires2=iresflip;
-			}
-			merge=MergeArray[ires1][ires2];
-			if(merge==NULL){
-				MergeArray[ires1][ires2]=new CMerge(resinfoptr,bptr->branching, LDecay);
-			}
-			else{
-				while(merge->next!=NULL){
-					merge=merge->next;
 				}
-				merge->next=new CMerge(resinfoptr,bptr->branching, LDecay);
+				merge=MergeArray[ires1][ires2];
+				if(merge==NULL){
+					MergeArray[ires1][ires2]=new CMerge(resinfoptr,bptr->branching, LDecay);
+				}
+				else{
+					while(merge->next!=NULL){
+						merge=merge->next;
+					}
+					merge->next=new CMerge(resinfoptr,bptr->branching, LDecay);
+				}
+				if(resinfoptr->mass>bptr->resinfoptr[0]->mass+bptr->resinfoptr[1]->mass){
+					qR2=Misc::triangle(resinfoptr->mass,
+					bptr->resinfoptr[0]->mass,bptr->resinfoptr[1]->mass);
+					SigmaMaxArray[ires1][ires2]+=
+						(bptr->branching*4.0*PI*HBARC*HBARC)*(2.0*resinfoptr->spin+1.0)/
+							((2.0*bptr->resinfoptr[0]->spin+1.0)*(2.0*bptr->resinfoptr[1]->spin+1.0)*qR2);
+					if(ires2!=ires1)
+						SigmaMaxArray[ires2][ires1]=SigmaMaxArray[ires1][ires2];
+				}
 			}
-			if(resinfoptr->mass>bptr->resinfoptr[0]->mass+bptr->resinfoptr[1]->mass){
-				qR2=Misc::triangle(resinfoptr->mass,
-				bptr->resinfoptr[0]->mass,bptr->resinfoptr[1]->mass);
-				SigmaMaxArray[ires1][ires2]+=
-				(bptr->branching*4.0*PI*HBARC*HBARC)*(2.0*resinfoptr->spin+1.0)/
-				((2.0*bptr->resinfoptr[0]->spin+1.0)*(2.0*bptr->resinfoptr[1]->spin+1.0)*qR2);
-				if(ires2!=ires1)
-					SigmaMaxArray[ires2][ires1]=SigmaMaxArray[ires1][ires2];
+			bsum+=bptr->branching;
+			//if the total mass is smaller than the minimum required mass, replace it
+			if(netm<resinfoptr->minmass){
+				resinfoptr->minmass=netm;
+				resinfoptr->bptr_minmass=bptr;
 			}
-		}
-		bsum+=bptr->branching;
-		//if the total mass is smaller than the minimum required mass, replace it
-		if(netm<resinfoptr->minmass){
-			resinfoptr->minmass=netm;
-			resinfoptr->bptr_minmass=bptr;
-		}
-		// switch places to make sure first branch has largest 
-		if(bptr->branching>bmax){
-			bmax=bptr->branching>bmax;
-			if(ichannel>0){
-				firstbptr=resinfoptr->branchlist[0];
-				resinfoptr->branchlist[0]=bptr;
-				resinfoptr->branchlist[ichannel]=firstbptr;
+			// switch places to make sure first branch has largest 
+			if(bptr->branching>bmax){
+				bmax=bptr->branching>bmax;
+				if(ichannel>0){
+					firstbptr=resinfoptr->branchlist[0];
+					resinfoptr->branchlist[0]=bptr;
+					resinfoptr->branchlist[ichannel]=firstbptr;
+				}
 			}
 		}
 	}
-}
-fclose(decayinfofile);
+	fclose(decayinfofile);
 }
 
 CResInfo* CResList::GetResInfoPtr(int code){
@@ -613,8 +614,10 @@ void CResList::CalcEoS(double T,double &epsilon,double &P,double &nhadrons,doubl
 					m2+=resinfoptr->branchlist[0]->resinfoptr[n]->mass;
 				}
 			}
-			if((minmass>0.0)&&(width>0.0)) freegascalc_onespecies_finitewidth(m,m1,m2,T,width,minmass,epsiloni,pi,densi,sigma2i,dedti,maxweighti);
-			else freegascalc_onespecies(m,T,epsiloni,pi,densi,sigma2i,dedti);
+			if((minmass>0.0)&&(width>0.0))
+				freegascalc_onespecies_finitewidth(m,m1,m2,T,width,minmass,epsiloni,pi,densi,sigma2i,dedti,maxweighti);
+			else
+				freegascalc_onespecies(m,T,epsiloni,pi,densi,sigma2i,dedti);
 			P+=pi*degen;
 			epsilon+=epsiloni*degen;
 			density[ires]=densi*degen;
@@ -656,7 +659,8 @@ void CResList::CalcEoSandChi(double T){
 					m2+=resinfoptr->branchlist[0]->resinfoptr[n]->mass;
 				}
 			}
-			if((minmass>0.0)&&(width>0.0)) freegascalc_onespecies_finitewidth(m,m1,m2,T,width,minmass,epsiloni,pi,densi,sigma2i,dedti,maxweighti);
+			if((minmass>0.0)&&(width>0.0))
+				freegascalc_onespecies_finitewidth(m,m1,m2,T,width,minmass,epsiloni,pi,densi,sigma2i,dedti,maxweighti);
 			else freegascalc_onespecies(m,T,epsiloni,pi,densi,sigma2i,dedti);
 			P+=pi*degen;
 			epsilon+=epsiloni*degen;

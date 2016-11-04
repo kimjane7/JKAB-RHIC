@@ -22,12 +22,12 @@ void CEosCalculator::InitializeEosScott(parameterMap* pM){
 	bExpTail   = false;
 	bGaussTail = false;
 	bPowerTail = true; 
-	
 	CResList *reslist=new CResList(pM);
 	
 	temp[0]=ed[0]=pr[0]=sd[0]=0.0;
 	for(iT=0;iT<=NT;iT++){
 		T=20.0+double(iT)*(Th-20.0)/double(NT);
+		printf("Initializing EoS for T=%g\n",T);
 		reslist->CalcEoS(T,epsilon,P,nhadrons,cs2,density);
 		temp[iT]=T/1000.0;
 		ed[iT]=epsilon/1000.0;

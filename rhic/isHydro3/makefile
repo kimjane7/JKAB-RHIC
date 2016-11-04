@@ -90,11 +90,7 @@ build/CHydroIO.o : ${ISHYDRO3_HFILES} src/CHydroIO.cpp
 	${CPP} -c ${OPT} ${INC} src/CHydroIO.cpp -o build/CHydroIO.o
 	
 build/teddy.o : ${ISHYDRO3_HFILES} src/teddy.cpp
-<<<<<<< HEAD
-		${CPP} -c ${OPT} ${INC} src/teddy.cpp -o build/teddy.o
-=======
 	${CPP} -c ${OPT} ${INC} src/teddy.cpp -o build/teddy.o
->>>>>>> 328a7790ed0fdc257af28792fae9d49b78b5da40
 
 build/CEosInitializeJosh.o : ${ISHYDRO3_HFILES} src/CEosInitializeJosh.cpp
 	${CPP} -c ${OPT} ${INC} src/CEosInitializeJosh.cpp -o build/CEosInitializeJosh.o

@@ -49,8 +49,9 @@ CEosCalculator::CEosCalculator(parameterMap* pM) {
 		
 		if(mEosJosh)
 			InitializeEosJosh(pM);
-		else if(mEosScott)
+		else if(mEosScott){
 			InitializeEosScott(pM);
+		}
 		
 		lastAccess = 1;
 		
@@ -641,7 +642,6 @@ CEos::CEos() {
 
 CEos::CEos(parameterMap* p){
 	mEosC = new CEosCalculator(p);
-	
 	// these variables don't necessarily get set
 	aMax = 0.;
 	bMax = 0.;

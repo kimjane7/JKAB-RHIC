@@ -1,6 +1,7 @@
 #include "CHydro.h"
 
 CHydro::CHydro(parameterMap* pM){
+	printf("------- entering CHydro now ----------\n");
 	pMap = pM;
 
 	mDataRoot = parameter::getS(*pMap,"HYDRO_OUTPUT_DATAROOT","./");
@@ -365,7 +366,6 @@ void CHydro::initializeHydro(){
 		else 
 			onMesh = new fullMesh(pMap);
 	}
-	
 	mEos = new CEos(pMap);
 	onMesh->setEos(mEos);
 	
@@ -382,8 +382,6 @@ void CHydro::initializeHydro(){
 	if (mInitNS != 0. || mInitNSTxxP != 0.)   
 		onMesh->initNS();
 	
-	
-	//printf("check aa\n");
 	// make additional meshes
 	//	printf("making additional meshes...\n");
 	if (mOctant == 3){
@@ -402,7 +400,6 @@ void CHydro::initializeHydro(){
 			k2 = new fullMesh(onMesh);
 		}
 	}
-	//printf("check bb\n");
 	
 	//	printf("active matching between meshes...\n");
 	offMesh->fillActiveCells();
@@ -414,6 +411,7 @@ void CHydro::initializeHydro(){
 		k2->fillActiveCells();
 		onMesh->copyActive(k1,k2);
 	}
+	printf("bbb\n");
 	
 #ifdef HYDRO_BOOST_THREADS
 	offMesh->setEos(mEos);
@@ -457,7 +455,6 @@ void CHydro::initializeHydro(){
 		openFileSpots();
 		printSpots();
 	}
-	//printf("check dd\n");
 	if (mIoOscarFull) 
 		openOscarFull();
 	
@@ -476,6 +473,8 @@ void CHydro::initializeHydro(){
 		oldMesh->setOsuFos(fOSU);
 		
 	}
+	
+	printf("ccc\n");
 	
 	if (mIoOscarHyper) {
 		openOscarHyper();

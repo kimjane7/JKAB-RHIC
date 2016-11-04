@@ -21,7 +21,6 @@ CB3D::CB3D(string run_name_set){
 	ibalmax=0;
 	npartstot=nactionstot=0;
 	CResList::b3d=this;
-	CResInfo::b3d=this;
 	CPart::b3d=this;
 	tau=0.0;
 	npartstot=nactionstot=0;
@@ -35,6 +34,7 @@ CB3D::CB3D(string run_name_set){
 	oscarfile=NULL;
 	sampler=NULL;
 	reslist=new CResList();
+	reslist->b3d=this;
 }
 
 void CB3D::CopyParMapPars(){
@@ -69,7 +69,6 @@ void CB3D::CopyParMapPars(){
 	BARYON_ANNIHILATION=parameter::getB(parmap,"B3D_BARYON_ANNIHILATION",false);
 	DELNPARTSTOT=parameter::getD(parmap,"B3D_DELNPARTSTOT",1000);
 	DELNACTIONSTOT=parameter::getD(parmap,"B3D_DELNACTIONSTOT",2000);
-	RESWIDTH_ALPHA=parameter::getD(parmap,"B3D_RESWIDTH_ALPHA",0.5);
 	NSCATT_MAX=parameter::getI(parmap,"B3D_NSCATT_MAX",0);
 	USE_OLD_SAMPLER=parameter::getB(parmap,"B3D_USE_OLD_SAMPLER",false);
 	BINARY_RW=parameter::getB(parmap,"B3D_BINARY_RW",false);

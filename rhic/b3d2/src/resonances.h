@@ -3,6 +3,7 @@
 
 #include "b3d.h"
 
+class CResList;
 class CResInfo;
 class CBranchInfo;
 
@@ -52,7 +53,7 @@ public:
 	double GenerateThermalMass(double maxweight, double T);
 	CResInfo();
 	static CRandom *ranptr;
-	static CB3D *b3d;
+	static CResList *reslist;
 };
 
 class CResList{
@@ -74,6 +75,8 @@ public:
 	CMerge ***MergeArray;
 	double **SigmaMaxArray;
 	static CB3D *b3d;
+	double RESWIDTH_ALPHA;
+	bool RESONANCE_DECAYS;
 	//void freegascalc_onespecies_offshell(CResInfo *resinfo,double T,double &epsilon,double &P,double &dens,double &sigma2,double &dedt);
 };
 
