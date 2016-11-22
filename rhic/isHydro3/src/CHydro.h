@@ -30,6 +30,18 @@ using namespace H5;
 
 using namespace std;
 
+class CHyperInfo{
+public:
+	double tau,x,y,eta,ux,uy,uz,E,P,T;
+	double Omega[4];
+	double pixx,pixy,pixz,piyy,piyz,pizz;
+	void Zero(){
+		tau=x=y=eta=ux=uy=uz=E=P=T=0.0;
+		Omega[0]=Omega[1]=Omega[2]=Omega[3]=0.0;
+		pixx=pixy=pixz=piyy=piyz=pizz=0.0;
+	}
+};
+
 class CHydro {
 private:
 	CMesh *onMesh, *offMesh, *tempMesh, *k1, *k2, *deadMesh,*oldMesh;

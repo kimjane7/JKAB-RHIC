@@ -35,7 +35,7 @@ void CHydro::openTeddyHyper(){
 	fm = mDataRoot + fm;
 	printf("opening fTeddyHyper, filename=%s\n",fm.c_str());
 			
-	fTeddyHyper = fopen(fm.c_str(),"w");
+	fTeddyHyper = fopen(fm.c_str(),"wb");
 	fprintf(fTeddyHyper,"TeddyHyper");
 	
 }
