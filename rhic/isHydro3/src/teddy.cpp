@@ -28,7 +28,7 @@ void CHydro::FindTeddySurface(){
 	double Tplus[4],Tminus[4],GradT[4];
 	double taubar=0.5*(newtau+prevtau);
 	delx[0]=newtau-prevtau;
-	delx[1]=delx[2]=newMesh->mDn;
+	delx[1]=delx[2]=newMesh->mDx;
 	delx[3]=newMesh->mDn*taubar;
 	double Omega[4], GradT2,dV;
 	//double xbar,ybar,etabar, E, P, Temp, uxbar,uybar,uzbar,Omega[4];
