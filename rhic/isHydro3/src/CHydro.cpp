@@ -474,8 +474,6 @@ void CHydro::initializeHydro(){
 		
 	}
 	
-	printf("ccc\n");
-	
 	if (mIoOscarHyper) {
 		openOscarHyper();
 		if (mOctant == 3)
