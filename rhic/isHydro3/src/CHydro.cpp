@@ -411,7 +411,6 @@ void CHydro::initializeHydro(){
 		k2->fillActiveCells();
 		onMesh->copyActive(k1,k2);
 	}
-	printf("bbb\n");
 	
 #ifdef HYDRO_BOOST_THREADS
 	offMesh->setEos(mEos);
