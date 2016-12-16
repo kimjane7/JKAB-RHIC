@@ -230,6 +230,7 @@ void CCell::calcDeriv() {
 }
 
 void CCell::fillDS(){
+	printf("TEST_fillDS__TEST\n");
 	for (int j=0;j<11;j++)
 		for (int i=0;i<3;i++)
 			if (neighbors[i][1]->getActive() && neighbors[i][0]->getActive()) {
@@ -246,6 +247,7 @@ void CCell::fillDS(){
 				if (!neighbors[i][0]->getActive()){
 					printf("\ntrouble in the old neighborhood!\n");
 					selfPrint();
+					neighbors[i][0]->selfPrint();
 				}
 				
 				if (ISSCALE == 'c' && j>3 ) {
